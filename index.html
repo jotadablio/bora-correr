@@ -16,6 +16,11 @@ img{max-width:100%}
 [hidden]{display:none!important}
 </style>
 <title>Bora Correr</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bora">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap">
@@ -277,6 +282,30 @@ details.how[open] summary::after{content:"−"}
 @keyframes fall{to{transform:translateY(105vh) rotate(540deg)}}
 .settings-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .settings-row .btn{width:auto;flex:1;font-size:.95rem;padding:12px 10px;text-transform:none}
+/* Dados, instalação e pesquisa */
+.privacy{margin:0;font-size:.85rem;color:var(--muted);font-weight:600;text-align:center;text-wrap:balance}
+.privacy .link{padding:0 2px;font-size:inherit}
+.install{flex-direction:row;flex-wrap:wrap;align-items:center;gap:12px 14px;border-color:var(--sky);background:var(--sky-soft)}
+.install .appicon{width:52px;height:52px;border-radius:13px;flex:none;box-shadow:0 3px 0 var(--sky-d)}
+.install .txt{flex:1 1 180px;min-width:0;display:flex;flex-direction:column;gap:2px}
+.install .txt b{font-family:var(--display);font-weight:600;font-size:1.1rem}
+.install .acts{display:flex;gap:12px;width:100%;align-items:center}
+.install .acts .btn{width:auto;flex:1;padding:12px 16px;font-size:1rem}
+.isteps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.isteps li{display:flex;gap:12px;align-items:center;background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:12px}
+.ibadge{width:44px;height:44px;border-radius:12px;background:var(--sky-soft);color:var(--sky);display:grid;place-items:center;flex:none;overflow:hidden}
+.ibadge svg{width:26px;height:26px}
+.ibadge img{width:44px;height:44px;display:block}
+.sheet p{margin:0}
+.sq{display:flex;flex-direction:column;gap:10px}
+textarea{font:inherit;font-weight:600;width:100%;border:2px solid var(--line);border-radius:14px;padding:12px;background:var(--surface);color:var(--ink);resize:vertical;min-height:84px}
+textarea:focus{border-color:var(--sky);outline:none}
+.switch-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:14px 16px;font-weight:800;cursor:pointer}
+.switch-row input{appearance:none;-webkit-appearance:none;width:52px;height:30px;border-radius:99px;background:var(--line);position:relative;flex:none;cursor:pointer;transition:background .15s;margin:0}
+.switch-row input::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--surface);transition:transform .15s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.switch-row input:checked{background:var(--go)}
+.switch-row input:checked::after{transform:translateX(22px)}
+.hometip .link{padding:0;font-size:inherit}
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -302,6 +331,8 @@ details.how[open] summary::after{content:"−"}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5l11 7-11 7z"/></svg>
       <span><b>Ver exemplo pronto</b><br><span class="muted">Nunca corri · prova de 5 km em 8/nov</span></span>
     </button>
+    <div id="home-install" hidden></div>
+    <p class="privacy">Este protótipo coleta dados de uso anônimos para melhorar o app. Nada de nome, e-mail ou dados de saúde. <button class="link" data-act="privacy">Saiba mais</button></p>
   </section>
 
   <!-- 1. Dias por semana -->
@@ -613,8 +644,76 @@ const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 function load(){ try { const t = localStorage.getItem(STORE); return t ? JSON.parse(t) : null; } catch(e){ return null; } }
 function save(){ try { localStorage.setItem(STORE, JSON.stringify(S)); } catch(e){} }
-let S = load() || {profile:null, fb:{}, sim:0, seen:{}};
+/* Passa o plano do Safari para o app da tela de início no iPhone (que tem armazenamento separado) */
+function encodeState(){ try { return btoa(unescape(encodeURIComponent(JSON.stringify(S)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); } catch(e){ return ''; } }
+function decodeState(t){ try { t = t.replace(/-/g,'+').replace(/_/g,'/'); return JSON.parse(decodeURIComponent(escape(atob(t)))); } catch(e){ return null; } }
+let S = load(), imported = false;
+try {
+  const qs = new URLSearchParams(location.search).get('s');
+  if (qs){
+    const inc = decodeState(qs);
+    if (inc && inc.profile && !(S && S.profile)){ S = inc; imported = true; }
+    history.replaceState(null, '', location.pathname);
+  }
+} catch(e){}
+S = S || {profile:null, fb:{}, sim:0, seen:{}};
 S.fb = S.fb || {}; S.seen = S.seen || {}; S.sim = S.sim || 0;
+S.uid = S.uid || ('u' + Date.now().toString(36) + Math.random().toString(36).slice(2,10));
+S.survey = S.survey || {state:null, askAt:3};
+S.install = S.install || {};
+if (S.analytics === undefined) S.analytics = true;
+save();
+
+function isStandalone(){ try { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch(e){ return false; } }
+const IS_IOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+// No iPhone o manifesto fica de fora: assim o atalho da tela de início guarda o endereço atual (com o plano).
+if (!IS_IOS){ const l = document.createElement('link'); l.rel = 'manifest'; l.href = 'manifest.webmanifest'; document.head.appendChild(l); }
+
+/* ---------- medição anônima ---------- */
+// Cole aqui a "Project API key" do PostHog (começa com phc_). Vazio = medição desligada.
+// Se o projeto for da região EU, troque o host para https://eu.i.posthog.com
+const ANALYTICS = { key: '', host: 'https://us.i.posthog.com' };
+const APP_VERSION = 'v2';
+const Track = (() => {
+  let ph = null, queue = [], booted = false;
+  const clean = v => (typeof v === 'string' && /^https?:/.test(v)) ? v.split(/[?#]/)[0] : v;
+  const scrub = o => { if (o && typeof o === 'object') for (const k in o) o[k] = clean(o[k]); return o; };
+  const ageBand = a => !a ? null : a<18 ? 'menos de 18' : a<30 ? '18-29' : a<40 ? '30-39' : a<50 ? '40-49' : a<60 ? '50-59' : '60+';
+  const active = () => !!ANALYTICS.key && S.analytics;
+  function supers(){
+    const p = S.profile;
+    return { versao: APP_VERSION, instalado: isStandalone(), data_simulada: !!S.sim, exemplo: !!(p && p.example),
+      meta_km: p ? p.dist : null, dias_semana: p ? p.days : null, experiencia: p ? p.exp : null, faixa_etaria: p ? ageBand(p.age) : null };
+  }
+  function boot(){
+    if (booted || !active()) return; booted = true;
+    const sc = document.createElement('script'); sc.async = true; sc.crossOrigin = 'anonymous';
+    sc.src = ANALYTICS.host.replace('.i.posthog.com', '-assets.i.posthog.com') + '/static/array.js';
+    sc.onload = () => { try {
+      window.posthog.init(ANALYTICS.key, {
+        api_host: ANALYTICS.host, autocapture: false, capture_pageview: false, capture_pageleave: false,
+        disable_session_recording: true, disable_surveys: true, disable_external_dependency_loading: true,
+        persistence: 'localStorage', person_profiles: 'always', bootstrap: { distinctID: S.uid },
+        before_send: ev => { if (ev){ scrub(ev.properties); scrub(ev.$set); scrub(ev.$set_once); } return ev; }
+      });
+      ph = window.posthog; queue.forEach(([e, pr]) => send(e, pr)); queue = [];
+    } catch(err){} };
+    document.head.appendChild(sc);
+  }
+  function send(e, pr){ try { ph.capture(e, pr); } catch(err){} }
+  function track(e, pr){
+    if (!active()) return;
+    const props = Object.assign(supers(), pr || {});
+    if (ph) send(e, props); else { queue.push([e, props]); boot(); }
+  }
+  function setEnabled(on){
+    S.analytics = on; save();
+    if (ph){ try { on ? ph.opt_in_capturing() : ph.opt_out_capturing(); } catch(err){} } else if (on) boot();
+  }
+  return { track, setEnabled, ageBand, active };
+})();
+const track = Track.track;
+const esc = v => String(v).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const today = () => E.realToday() + (S.sim||0);
 const fmt = (n, o) => new Intl.DateTimeFormat('pt-BR', Object.assign({timeZone:'UTC'}, o)).format(new Date(n*DAY)).replace(/\./g,'');
 const fmtLong = n => fmt(n,{weekday:'long',day:'numeric',month:'long'});
@@ -631,6 +730,8 @@ const ICON = {
   flag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4h11l-2.2 4L17 12H6"/></svg>',
   alert:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5L2.8 19.5h18.4z"/><path d="M12 10v4M12 17v.01"/></svg>',
   heart:'<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 20.5s-8-4.9-8-11A4.5 4.5 0 0 1 12 6.6a4.5 4.5 0 0 1 8 2.9c0 6.1-8 11-8 11z"/></svg>',
+  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11M8 7.5l4-4 4 4"/><path d="M8 10.5H6v10h12v-10h-2"/></svg>',
+  plusbox:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg>',
   info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg>',
   shoe:'<svg viewBox="0 0 24 24"><path fill="currentColor" d="M2.5 16.5c0-3 .8-7.5 2.2-9.5l3.2 1.1c.8 1.8 2.6 3 5.4 3.5 3.6.6 7.2 1.6 8.2 4.4v2.5H2.5z"/></svg>',
   cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M8.5 13.5l2.5 2.5 4.5-5"/></svg>',
@@ -661,6 +762,8 @@ function go(name, push=true){
   if (push && cur && cur!==name && cur!=='gen') history_.push(cur);
   SCREENS.forEach(s => $('#scr-'+s).hidden = s!==name);
   window.scrollTo(0,0);
+  if (['days','date','health','summary'].includes(name) && cur!==name) track('tela_vista', {tela:name});
+  if (name==='home') renderHomeInstall();
 }
 $$('[data-back]').forEach(b => b.addEventListener('click', ()=>{ const p = history_.pop() || 'home'; go(p,false); }));
 
@@ -668,12 +771,14 @@ $$('[data-back]').forEach(b => b.addEventListener('click', ()=>{ const p = histo
 let draft = {};
 $$('[data-dist]').forEach(b => b.addEventListener('click', ()=>{
   draft = {dist:+b.dataset.dist, health:{}};
+  track('meta_escolhida', {meta_km:draft.dist});
   $$('#days-opts .opt').forEach(o=>o.setAttribute('aria-pressed','false'));
   go('days');
 }));
 $$('#days-opts .opt').forEach(b => b.addEventListener('click', ()=>{
   $$('#days-opts .opt').forEach(o=>o.setAttribute('aria-pressed', String(o===b)));
   draft.days = +b.dataset.days;
+  track('dias_escolhidos', {dias:draft.days});
   setTimeout(()=>{ prepDate(); go('date'); }, 160);
 }));
 
@@ -694,8 +799,8 @@ function checkDate(){
   $('#date-next').disabled = false;
 }
 $('#race-date').addEventListener('input', checkDate);
-$('#date-next').addEventListener('click', ()=>{ draft.race = $('#race-date').value; draft.noDate = false; go('health'); });
-$('#date-none').addEventListener('click', ()=>{ draft.race = null; draft.noDate = true; go('health'); });
+$('#date-next').addEventListener('click', ()=>{ draft.race = $('#race-date').value; draft.noDate = false; track('data_prova', {tem_data:true, dias_ate_prova:E.toNum(draft.race)-today()}); go('health'); });
+$('#date-none').addEventListener('click', ()=>{ draft.race = null; draft.noDate = true; track('data_prova', {tem_data:false}); go('health'); });
 
 $$('#exp-opts .opt').forEach(b => b.addEventListener('click', ()=>{
   $$('#exp-opts .opt').forEach(o=>o.setAttribute('aria-pressed', String(o===b)));
@@ -718,6 +823,7 @@ $('#health-next').addEventListener('click', ()=>{
   err.textContent = msg; err.hidden = !msg;
   if (msg) return;
   draft.age = age; draft.weight = w;
+  track('cadastro_concluido', {experiencia:draft.exp, faixa_etaria:Track.ageBand(age)});
   if (h.cardiac) cardiacWarning(); else generate();
 });
 
@@ -737,9 +843,13 @@ function generate(){
     let n = t + rec*7; while (E.dow(n)!==0) n++;
     race = E.toStr(n);
   }
-  S.profile = {dist:draft.dist, days:draft.days, race, noDate:!!draft.noDate, age:draft.age, weight:draft.weight, exp:draft.exp, health:draft.health||{}, start:t};
-  S.fb = {}; S.seen = {};
+  S.profile = {dist:draft.dist, days:draft.days, race, noDate:!!draft.noDate, age:draft.age, weight:draft.weight, exp:draft.exp, health:draft.health||{}, start:t, example:!!draft.example};
+  S.fb = {}; S.seen = {}; S.survey = {state:null, askAt:3};
   save();
+  try {
+    const pl = E.build(S.profile, {}, t);
+    track('plano_criado', {tem_data:!draft.noDate, dias_ate_prova:pl.meta.D, semanas:Math.max(1,Math.round(pl.meta.D/7)), treinos:pl.sessions.length, objetivo_ajustado:pl.meta.completion});
+  } catch(e){}
   go('gen');
   const msgs = ['Distribuindo treinos e descansos','Calculando o volume semana a semana','Guardando a última semana para o polimento'];
   let i=0; const iv = setInterval(()=>{ i++; if (msgs[i]) $('#gen-msg').textContent = msgs[i]; }, 450);
@@ -751,7 +861,8 @@ $('#btn-example').addEventListener('click', ()=>{
   const t = today();
   let race = '2026-11-08';
   if (E.toNum(race) < t+7) race = E.toStr(t+20);
-  draft = {dist:5, days:3, race, noDate:false, age:35, weight:78, exp:'never', health:{none:true}};
+  draft = {dist:5, days:3, race, noDate:false, age:35, weight:78, exp:'never', health:{none:true}, example:true};
+  track('exemplo_aberto');
   generate();
 });
 
@@ -903,6 +1014,7 @@ function renderPlan(){
       </div>
       <div class="trackmeta"><span>${Math.min(st.done, st.total-1)} de ${st.total-1} treinos</span><span>${p.noDate?'Dia D':'Prova'} ${fmtDM(m.race)}</span></div>
     </div>
+    ${installCard()}
     ${pendHTML}
     ${todayHTML}
     <div class="sect"><h2>Calendário</h2><span class="muted">${fmt(m.start,{month:'short'})} – ${fmt(m.race,{month:'short',year:'numeric'})}</span></div>
@@ -941,9 +1053,11 @@ let howOpen = false;
 
 /* ---------- folha de detalhes ---------- */
 function openModal(html){
+  if (modalCleanup){ const c = modalCleanup; modalCleanup = null; c(); }
   $('#layer').innerHTML = `<div class="scrim" data-act="close-bg"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`;
 }
-function closeModal(){ $('#layer').innerHTML=''; sheetDay=null; redOpen=null; confirmReset=false; }
+let modalCleanup = null;
+function closeModal(){ const c = modalCleanup; modalCleanup = null; $('#layer').innerHTML=''; sheetDay=null; redOpen=null; confirmReset=false; if (c) c(); }
 
 function openDay(n){
   n = +n; sheetDay = n;
@@ -981,6 +1095,11 @@ function openSettings(){
       <div>${plan.meta.label} · ${S.profile.days} dias/semana · ${S.profile.age} anos · ${S.profile.weight} kg</div>
       <div class="muted">${{never:'Nunca correu',sometimes:'Corre às vezes',often:'Corre com frequência'}[S.profile.exp]}</div>
     </div>
+    <div class="card" style="gap:6px">
+      <div class="eyebrow">Dados de uso anônimos</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>${S.analytics?'Ligado':'Desligado'}</b><button class="link" data-act="privacy">Alterar</button></div>
+    </div>
+    ${!isStandalone() && (deferredPrompt || IS_IOS) ? `<button class="btn ghost" data-act="install">Adicionar à tela inicial</button>` : ''}
     <button class="btn ${confirmReset?'':'ghost'}" data-act="reset" style="${confirmReset?'background:var(--stop);box-shadow:0 5px 0 var(--stop-d)':''}">${confirmReset?'Toque de novo para apagar tudo':'Novo plano'}</button>`);
 }
 
@@ -1014,14 +1133,118 @@ function logFb(k, v){
   redOpen = null; save();
   const st = renderPlan();
   if (sheetDay!==null) openDay(sheetDay);
-  if (v===null) return;
+  if (v===null){ track('treino_desfeito', {dia:k}); return; }
+  const sess = plan.sessions.find(x=>x.day===E.toNum(k));
+  const RES = {g:'verde', y:'amarelo', rf:'faltei', rn:'nao_consegui'};
   const newMsg = plan.log.find(l=>!beforeMsgs.has(l.msg));
   const pts = st.points - before.points;
   const head = {g:'Mandou bem!', y:'Boa! Ouvir o corpo também conta.', rf:'Sem problema. Esse treino volta no próximo dia de treino.', rn:'Tudo bem. Vamos recuar um nível para ganhar confiança.'}[v];
   const sub = [pts>0?`+${pts} pontos`:'', (v!=='rf')?`ofensiva ${st.streak}`:'ofensiva zerada', newMsg && v!=='rf' && v!=='rn' ? newMsg.msg : ''].filter(Boolean).join(' · ');
   toast(head, sub);
-  st.badges.forEach((b,i)=>{ if (b.got && !S.seen[b.id]){ S.seen[b.id]=true; save(); setTimeout(()=>celebrate(b,i), 350); } });
+  track('treino_registrado', {resultado:RES[v], semana:sess?sess.week+1:null, nivel:sess?sess.level:null, tipo:sess?sess.type:null, prova:!!(sess&&sess.type==='R'), atraso_dias:today()-E.toNum(k), ofensiva:st.streak, pontos:st.points, treinos_feitos:st.done});
+  st.badges.forEach((b,i)=>{ if (b.got && !S.seen[b.id]){ S.seen[b.id]=true; save(); track('conquista', {nome:b.id}); setTimeout(()=>celebrate(b,i), 350); } });
+  if (v==='g'||v==='y'||v==='rn') setTimeout(maybeSurvey, 900);
 }
+
+/* ---------- pesquisa rápida depois de 3 treinos ---------- */
+let surveyPending = false, surveyAns = {}, surveyShown = false;
+function attempts(){ const t = today(); return plan.sessions.filter(s=>s.day<=t && ['g','y','rn'].includes(S.fb[ds(s.day)])).length; }
+function maybeSurvey(){
+  const sv = S.survey;
+  if (!S.analytics || sv.state==='sent' || sv.state==='done') return;
+  if (attempts() < sv.askAt) return;
+  if ($('.party')){ surveyPending = true; return; }
+  openSurvey();
+}
+function surveyLater(){
+  const sv = S.survey;
+  if (sv.state==='later') sv.state = 'done'; else { sv.state = 'later'; sv.askAt = attempts() + 3; }
+  save(); track('feedback_adiado', {vez: sv.state==='done' ? 2 : 1});
+}
+function openSurvey(){
+  surveyPending = false; clearTimeout(toastTimer); $$('.toast').forEach(x=>x.remove());
+  if (!surveyShown){ surveyShown = true; track('feedback_mostrado', {treinos_feitos:attempts()}); }
+  const q = (key, label, opts) => `<div class="sq"><div class="sub" id="lbl-${key}">${label}</div><div class="chips" role="group" aria-labelledby="lbl-${key}">${opts.map(([val,t])=>`<button class="chip-btn" data-act="sv" data-k="${key}" data-v="${val}" aria-pressed="${surveyAns[key]===val}">${t}</button>`).join('')}</div></div>`;
+  openModal(`<div class="grab"></div>
+    <div class="sheet-h"><div><div class="eyebrow">${attempts()} treinos registrados</div><h3>Como está sendo?</h3></div><button class="iconbtn" data-act="close" aria-label="Fechar">${ICON.x}</button></div>
+    <p class="muted">Leva 20 segundos e ajuda muito a melhorar o app.</p>
+    ${q('plano', 'O plano está…', [['leve','Leve demais'],['medida','Na medida'],['puxado','Puxado demais']])}
+    ${q('falta', 'Se o app sumisse amanhã…', [['muita','Ia sentir muita falta'],['pouca','Ia sentir um pouco'],['nenhuma','Não ia fazer falta']])}
+    <div class="sq"><label class="sub" for="sv-text">O que faria você usar ainda mais? <span class="muted" style="font-family:var(--body);font-size:.9rem">(opcional)</span></label>
+      <textarea id="sv-text" maxlength="500" rows="3" placeholder="Escreva o que vier à cabeça">${esc(surveyAns.texto||'')}</textarea></div>
+    <button class="btn" id="sv-send" data-act="sv-send" ${surveyAns.plano&&surveyAns.falta?'':'disabled'}>Enviar</button>
+    <button class="link" data-act="close" style="align-self:center">Agora não</button>`);
+  modalCleanup = surveyLater;
+}
+function sendSurvey(){
+  const texto = ($('#sv-text') ? $('#sv-text').value : '').trim().slice(0,500);
+  const wasActive = Track.active();
+  track('feedback_enviado', {plano:surveyAns.plano, falta:surveyAns.falta, comentario:texto||null, treinos_feitos:attempts()});
+  S.survey = {state:'sent', em:E.toStr(today()), respostas:{plano:surveyAns.plano, falta:surveyAns.falta, texto}};
+  save(); modalCleanup = null; closeModal();
+  toast('Valeu demais!', wasActive ? 'Sua resposta foi direto para quem está criando o app.' : '');
+}
+
+/* ---------- tela inicial do celular ---------- */
+let deferredPrompt = null, installSeen = false;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; if (!$('#scr-plan').hidden) renderPlan(); });
+addEventListener('appinstalled', () => {
+  deferredPrompt = null; S.install.done = true; save(); track('app_instalado');
+  toast('Pronto! O Bora está na sua tela inicial.'); if (!$('#scr-plan').hidden) renderPlan();
+});
+function installCard(){
+  if (isStandalone() || S.install.done || S.install.dismissed || !(deferredPrompt || IS_IOS)) return '';
+  if (!installSeen){ installSeen = true; track('instalar_mostrado', {plataforma: IS_IOS ? 'ios' : 'android'}); }
+  return `<div class="card install">
+    <img class="appicon" src="icon-192.png" alt="">
+    <div class="txt"><b>Coloque o Bora na tela inicial</b><span class="muted">Abre como app e fica mais fácil lembrar do treino.</span></div>
+    <div class="acts"><button class="btn" data-act="install">Adicionar</button><button class="link" data-act="install-later">Agora não</button></div>
+  </div>`;
+}
+function renderHomeInstall(){
+  const box = $('#home-install'); if (!box) return;
+  const show = IS_IOS && !isStandalone();
+  box.hidden = !show;
+  box.innerHTML = show ? `<div class="note info hometip">${ICON.info}<p>No iPhone, coloque o Bora na tela de início antes de começar. <button class="link" data-act="install">Como fazer</button></p></div>` : '';
+}
+function doInstall(){
+  track('instalar_clicado', {plataforma: IS_IOS ? 'ios' : 'android'});
+  if (deferredPrompt){
+    const dp = deferredPrompt; deferredPrompt = null;
+    dp.prompt();
+    dp.userChoice.then(c => { track('instalar_resposta', {resposta:c.outcome}); if (c.outcome!=='accepted' && !$('#scr-plan').hidden) renderPlan(); }).catch(()=>{});
+    return;
+  }
+  // iPhone: o endereço atual passa a carregar o plano, para o atalho abrir com ele
+  try { history.replaceState(null, '', location.pathname + '?s=' + encodeState()); } catch(e){}
+  openModal(`<div class="grab"></div>
+    <div class="sheet-h"><h3>Adicionar à tela de início</h3><button class="iconbtn" data-act="close" aria-label="Fechar">${ICON.x}</button></div>
+    <ol class="isteps">
+      <li><span class="ibadge">${ICON.share}</span><div>Toque em <b>Compartilhar</b> na barra do Safari</div></li>
+      <li><span class="ibadge">${ICON.plusbox}</span><div>Role e escolha <b>Adicionar à Tela de Início</b></div></li>
+      <li><span class="ibadge"><img src="icon-192.png" alt=""></span><div>Abra o <b>Bora</b> pelo ícone, como qualquer app</div></li>
+    </ol>
+    <p class="muted">Não achou a opção? Abra este link no Safari e tente de novo.</p>
+    <button class="btn" data-act="close">Entendi</button>`);
+  modalCleanup = () => { try { history.replaceState(null, '', location.pathname); } catch(e){} };
+}
+
+/* ---------- sobre os dados ---------- */
+function openPrivacy(){
+  openModal(`<div class="grab"></div>
+    <div class="sheet-h"><h3>Sobre os dados</h3><button class="iconbtn" data-act="close" aria-label="Fechar">${ICON.x}</button></div>
+    <p>Para saber se o app ajuda de verdade, este protótipo registra de forma anônima o que acontece nele: as telas vistas, a meta escolhida, os treinos marcados no semáforo e as respostas da pesquisa.</p>
+    <p><b>Não registramos</b> nome, e-mail, peso nem problemas de saúde. A idade vai só como faixa (por exemplo, 30-39). O seu plano completo fica apenas neste aparelho.</p>
+    <label class="switch-row" for="an-toggle"><span>Compartilhar dados de uso anônimos</span><input type="checkbox" id="an-toggle" ${S.analytics?'checked':''}></label>
+    <button class="btn" data-act="close">Fechar</button>`);
+}
+document.addEventListener('change', e => {
+  if (e.target.id !== 'an-toggle') return;
+  const on = e.target.checked;
+  if (!on) track('medicao_desligada');
+  Track.setEnabled(on);
+  if (on) track('medicao_ligada');
+});
 
 /* ---------- eventos ---------- */
 document.addEventListener('click', e=>{
@@ -1030,25 +1253,40 @@ document.addEventListener('click', e=>{
   if (a==='close-bg'){ if (e.target===el) closeModal(); return; }
   if (a==='close') return closeModal();
   if (a==='cardiac-ok'){ closeModal(); return generate(); }
-  if (a==='to-plan'){ history_.length=0; renderPlan(); return go('plan', false); }
+  if (a==='to-plan'){ history_.length=0; renderPlan(); track('calendario_aberto'); return go('plan', false); }
+  if (a==='privacy') return openPrivacy();
+  if (a==='install') return doInstall();
+  if (a==='install-later'){ S.install.dismissed = true; save(); track('instalar_dispensado'); return renderPlan(); }
+  if (a==='sv'){
+    surveyAns[el.dataset.k] = el.dataset.v;
+    $$(`[data-act="sv"][data-k="${el.dataset.k}"]`).forEach(b=>b.setAttribute('aria-pressed', String(b===el)));
+    const sb = $('#sv-send'); if (sb) sb.disabled = !(surveyAns.plano && surveyAns.falta);
+    return;
+  }
+  if (a==='sv-send') return sendSurvey();
   if (a==='open') return openDay(el.dataset.day);
   if (a==='log') return logFb(el.dataset.day, el.dataset.v);
   if (a==='undo') return logFb(el.dataset.day, null);
   if (a==='red'){ redOpen = el.dataset.day; renderPlan(); if (sheetDay!==null) openDay(sheetDay); return; }
   if (a==='red-cancel'){ redOpen = null; renderPlan(); if (sheetDay!==null) openDay(sheetDay); return; }
   if (a==='settings'){ confirmReset=false; return openSettings(); }
-  if (a==='sim'){ const v=+el.dataset.v; S.sim = v===0 ? 0 : S.sim+v; save(); renderPlan(); return openSettings(); }
+  if (a==='sim'){ const v=+el.dataset.v; S.sim = v===0 ? 0 : S.sim+v; save(); track('data_simulada_alterada', {deslocamento:S.sim}); renderPlan(); return openSettings(); }
   if (a==='reset'){
     if (!confirmReset){ confirmReset = true; return openSettings(); }
-    S = {profile:null, fb:{}, sim:S.sim, seen:{}}; save(); closeModal(); history_.length=0; return go('home', false);
+    track('plano_reiniciado');
+    S = {profile:null, fb:{}, sim:S.sim, seen:{}, uid:S.uid, survey:{state:null, askAt:3}, install:S.install, analytics:S.analytics}; save(); closeModal(); history_.length=0; return go('home', false);
   }
-  if (a==='party-close'){ el.closest('.party').remove(); }
+  if (a==='party-close'){ el.closest('.party').remove(); if (surveyPending) setTimeout(openSurvey, 250); }
 });
-document.addEventListener('keydown', e=>{ if (e.key==='Escape'){ closeModal(); $$('.party').forEach(x=>x.remove()); } });
+document.addEventListener('keydown', e=>{ if (e.key==='Escape'){ closeModal(); $$('.party').forEach(x=>x.remove()); if (surveyPending) setTimeout(openSurvey, 250); } });
 
 /* ---------- início ---------- */
 if (S.profile){ try { renderPlan(); go('plan', false); } catch(err){ S.profile=null; save(); go('home', false); } }
 else go('home', false);
+track('app_aberto', {tem_plano:!!S.profile, veio_do_safari:imported});
+if ('serviceWorker' in navigator && location.protocol === 'https:'){
+  addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
 </script>
 
 </body>

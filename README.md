@@ -22,8 +22,11 @@ Leva uns 5 minutos:
 
 1. Abra o link no celular e escolha uma meta. Pode ser a sua meta de verdade, se tiver uma.
 2. Responda as perguntas e veja o plano que aparece.
-3. Registre o treino de hoje com um dos três botões do semáforo.
-4. Quer ver o plano se adaptando sem esperar semanas? Toque no ícone de ajustes (canto superior direito) e use **+1 dia** / **+7 dias** para avançar no tempo.
+3. Coloque o Bora na tela inicial do celular (o próprio app mostra como). Assim ele abre como um aplicativo.
+4. Registre o treino de hoje com um dos três botões do semáforo.
+5. Quer ver o plano se adaptando sem esperar semanas? Toque no ícone de ajustes (canto superior direito) e use **+1 dia** / **+7 dias** para avançar no tempo.
+
+Se você topar seguir o plano de verdade, melhor ainda. Depois do terceiro treino o app faz 3 perguntinhas rápidas, e essa é a resposta que eu mais quero ler.
 
 Depois, eu adoraria saber:
 
@@ -67,9 +70,17 @@ Aqui o que conta é **aparecer**, não correr muito.
 
 ## Coisas técnicas (curtas)
 
-- É um único `index.html`, sem build, sem framework, sem servidor.
-- Seus dados ficam **só no seu navegador** (localStorage). Nada é enviado para lugar nenhum. Se limpar os dados do navegador ou trocar de celular, o plano some.
+- É um único `index.html`, sem build, sem framework, sem servidor. Junto vêm o manifesto, os ícones e um service worker para ele funcionar como app na tela inicial (e abrir mesmo sem internet).
+- Seu plano fica **só no seu celular** (localStorage). Se limpar os dados do navegador ou trocar de aparelho, ele some.
 - Para rodar localmente, basta abrir o `index.html` no navegador.
+
+### Sobre os dados de uso
+
+Para descobrir se a ideia funciona, o protótipo registra **de forma anônima** o que acontece nele: telas vistas, meta escolhida, treinos marcados no semáforo e as respostas da pesquisa. Uso o [PostHog](https://posthog.com) para isso.
+
+O que **não** sai do seu celular: nome, e-mail, peso e problemas de saúde. A idade vai só como faixa (30-39, por exemplo). Dá para desligar a qualquer momento em *Ajustes → Dados de uso anônimos*.
+
+Quando alguém usa o botão de avançar dias, os eventos vão marcados como `data_simulada`, para não misturar teste com uso real.
 
 ## Aviso importante
 
