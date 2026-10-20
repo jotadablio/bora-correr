@@ -1,0 +1,1055 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F1F5FA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F141D" media="(prefers-color-scheme: dark)">
+<meta name="description" content="Protótipo: seu plano de corrida até 2, 5, 10 ou 21 km, que se adapta ao seu feedback.">
+<meta property="og:title" content="Bora Correr">
+<meta property="og:description" content="Protótipo para testes: seu plano de corrida até a prova, do zero.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Ccircle cx='60' cy='60' r='54' fill='%23FF6A2B'/%3E%3Cpath d='M26 38H94L99 50H21Z' fill='%232D7BF0'/%3E%3Ccircle cx='46' cy='66' r='10' fill='%23fff'/%3E%3Ccircle cx='74' cy='66' r='10' fill='%23fff'/%3E%3Ccircle cx='48' cy='67' r='5' fill='%2317202E'/%3E%3Ccircle cx='76' cy='67' r='5' fill='%2317202E'/%3E%3C/svg%3E">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px/1.4 system-ui,-apple-system,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>Bora Correr</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap">
+<style>
+/* Layout: uma coluna de app (até 480px) com botões "3D" de sombra sólida; a pista de atletismo vira a barra de progresso até a prova. */
+:root{
+  --bg:#F1F5FA; --surface:#FFFFFF; --surface-2:#E7EDF5; --ink:#17202E; --muted:#5D6A80; --line:#D5DEEA;
+  --accent:#FF6A2B; --accent-d:#CF4C12; --accent-soft:#FFE8DD; --on-accent:#FFFFFF;
+  --sky:#2D7BF0; --sky-d:#1B5BC2; --sky-soft:#DCE9FD;
+  --grape:#8A5CF5; --grape-d:#6639CF;
+  --go:#22B356; --go-d:#178A41; --go-soft:#DCF4E4;
+  --warn:#FFC22E; --warn-d:#D39600; --warn-soft:#FFF3D0; --warn-ink:#433100;
+  --stop:#EF4338; --stop-d:#BC2B23; --stop-soft:#FDE2E0;
+  --track:#D4532E; --lane:rgba(255,255,255,.75);
+  --scrim:rgba(14,20,30,.45);
+  --display:"Fredoka", ui-rounded, "Nunito", system-ui, sans-serif;
+  --body:"Nunito", ui-rounded, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0F141D; --surface:#19212E; --surface-2:#232D3C; --ink:#EEF2F8; --muted:#9CA8BB; --line:#2C3748;
+  --accent:#FF7A3D; --accent-d:#AE4317; --accent-soft:#3A2419;
+  --sky:#4C8FF5; --sky-d:#2A5FB8; --sky-soft:#1A2B46;
+  --grape:#9A72F7; --grape-d:#5E37BE;
+  --go:#2CC163; --go-d:#1A813F; --go-soft:#15301F;
+  --warn:#FFC83D; --warn-d:#B08000; --warn-soft:#382E12; --warn-ink:#3A2A00;
+  --stop:#F25A50; --stop-d:#A82C24; --stop-soft:#3A1C1B;
+  --track:#B34A2B; --lane:rgba(255,255,255,.6); --scrim:rgba(0,0,0,.6);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0F141D; --surface:#19212E; --surface-2:#232D3C; --ink:#EEF2F8; --muted:#9CA8BB; --line:#2C3748;
+  --accent:#FF7A3D; --accent-d:#AE4317; --accent-soft:#3A2419;
+  --sky:#4C8FF5; --sky-d:#2A5FB8; --sky-soft:#1A2B46;
+  --grape:#9A72F7; --grape-d:#5E37BE;
+  --go:#2CC163; --go-d:#1A813F; --go-soft:#15301F;
+  --warn:#FFC83D; --warn-d:#B08000; --warn-soft:#382E12; --warn-ink:#3A2A00;
+  --stop:#F25A50; --stop-d:#A82C24; --stop-soft:#3A1C1B;
+  --track:#B34A2B; --lane:rgba(255,255,255,.6); --scrim:rgba(0,0,0,.6);
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;font-weight:700;line-height:1.4;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--sky);outline-offset:3px}
+h1,h2,h3{font-family:var(--display);font-weight:600;margin:0;text-wrap:balance;line-height:1.15}
+.app{max-width:480px;margin:0 auto;min-height:100%;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 40px}
+.screen{display:flex;flex-direction:column;gap:20px}
+.muted{color:var(--muted)}
+.eyebrow{font-size:.78rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+
+/* Botões 3D */
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border:0;border-radius:16px;padding:16px 20px;font-family:var(--display);font-weight:600;font-size:1.15rem;letter-spacing:.02em;background:var(--accent);color:var(--on-accent);box-shadow:0 5px 0 var(--accent-d);cursor:pointer;transition:transform .07s,box-shadow .07s;text-transform:uppercase}
+.btn:active{transform:translateY(5px);box-shadow:0 0 0 var(--accent-d)}
+.btn:disabled{background:var(--surface-2);color:var(--muted);box-shadow:0 5px 0 var(--line);cursor:not-allowed;transform:none}
+.btn.ghost{background:var(--surface);color:var(--sky);box-shadow:0 4px 0 var(--line);border:2px solid var(--line)}
+.btn.ghost:active{box-shadow:0 0 0 var(--line)}
+.link{background:none;border:0;color:var(--sky);font-weight:800;cursor:pointer;padding:8px 4px;text-decoration:underline;text-underline-offset:3px}
+
+/* Topo do onboarding */
+.obar{display:flex;align-items:center;gap:12px;min-height:44px}
+.iconbtn{width:44px;height:44px;border-radius:12px;border:0;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer;flex:none}
+.iconbtn svg{width:26px;height:26px}
+.steps-bar{flex:1;height:16px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.steps-bar i{display:block;height:100%;background:var(--go);border-radius:99px;transition:width .35s ease;box-shadow:inset 0 -4px 0 rgba(0,0,0,.12)}
+.q{font-size:1.65rem}
+
+/* Tela inicial */
+.hero{display:flex;align-items:center;gap:14px;padding-top:8px}
+.hero svg{width:96px;height:96px;flex:none}
+.hero h1{font-size:2rem}
+.bubble{position:relative;background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:10px 14px;font-weight:800}
+.dist-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.dist{border:0;border-radius:22px;padding:18px 16px 16px;text-align:left;cursor:pointer;color:var(--on-accent);display:flex;flex-direction:column;gap:2px;min-height:132px;justify-content:flex-end;transition:transform .07s,box-shadow .07s}
+.dist b{font-family:var(--display);font-weight:700;font-size:3rem;line-height:1}
+.dist b small{font-size:1.2rem;font-weight:600;margin-left:3px}
+.dist span{font-weight:800;opacity:.92}
+.dist.d2{background:var(--go);box-shadow:0 6px 0 var(--go-d)}
+.dist.d5{background:var(--accent);box-shadow:0 6px 0 var(--accent-d)}
+.dist.d10{background:var(--sky);box-shadow:0 6px 0 var(--sky-d)}
+.dist.d21{background:var(--grape);box-shadow:0 6px 0 var(--grape-d)}
+.dist:active{transform:translateY(6px);box-shadow:none}
+.example{background:var(--surface);border:2px dashed var(--line);border-radius:16px;padding:14px;display:flex;gap:12px;align-items:center;cursor:pointer;text-align:left;width:100%}
+.example svg{width:28px;height:28px;color:var(--sky);flex:none}
+
+/* Opções */
+.opts{display:grid;gap:12px}
+.opts.four{grid-template-columns:repeat(2,1fr)}
+.opt{border:2px solid var(--line);background:var(--surface);border-radius:18px;padding:16px;box-shadow:0 4px 0 var(--line);cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:2px;transition:transform .07s,box-shadow .07s}
+.opt:active{transform:translateY(4px);box-shadow:none}
+.opt[aria-pressed="true"]{border-color:var(--sky);background:var(--sky-soft);box-shadow:0 4px 0 var(--sky)}
+.opt .big{font-family:var(--display);font-size:2.4rem;font-weight:700;line-height:1}
+.opt .t{font-family:var(--display);font-weight:600;font-size:1.15rem}
+.opt .s{color:var(--muted);font-size:.92rem}
+.days .opt{align-items:center;text-align:center;padding:20px 10px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.field:focus-within{border-color:var(--sky)}
+.field label{font-size:.8rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.field .in{display:flex;align-items:baseline;gap:6px}
+.field input{width:100%;min-width:0;border:0;background:transparent;color:var(--ink);font-family:var(--display);font-size:1.8rem;font-weight:600;padding:0;outline:none}
+.field input::placeholder{color:var(--line)}
+.field .u{color:var(--muted);font-weight:800}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip-btn{border:2px solid var(--line);background:var(--surface);border-radius:99px;padding:10px 16px;font-weight:800;cursor:pointer;box-shadow:0 3px 0 var(--line)}
+.chip-btn[aria-pressed="true"]{border-color:var(--sky);background:var(--sky-soft);box-shadow:0 3px 0 var(--sky)}
+.sub{font-family:var(--display);font-weight:600;font-size:1.15rem}
+.date-card{background:var(--surface);border:2px solid var(--line);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.date-card input{font:inherit;font-size:1.1rem;padding:12px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+.date-big{font-family:var(--display);font-size:1.4rem;font-weight:600;color:var(--accent)}
+.err{color:var(--stop);font-weight:800}
+.foot{margin-top:auto;display:flex;flex-direction:column;gap:12px;padding-top:8px}
+
+/* Avisos */
+.note{border-radius:16px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;font-weight:700}
+.note svg{width:24px;height:24px;flex:none;margin-top:1px}
+.note.warn{background:var(--warn-soft);color:var(--ink)}
+.note.warn svg{color:var(--warn-d)}
+.note.stop{background:var(--stop-soft);color:var(--ink)}
+.note.stop svg{color:var(--stop)}
+.note.info{background:var(--sky-soft);color:var(--ink)}
+.note.info svg{color:var(--sky)}
+.note p{margin:0}
+.note p+p{margin-top:6px}
+
+/* Gerando */
+.gen{min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center}
+.gen svg{width:120px;height:120px;animation:hop .55s ease-in-out infinite alternate}
+@keyframes hop{to{transform:translateY(-14px)}}
+
+/* Resumo */
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:12px;text-align:center}
+.stat b{display:block;font-family:var(--display);font-size:1.9rem;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.1}
+.stat span{font-size:.85rem;color:var(--muted);font-weight:800}
+.goal-pill{background:var(--accent-soft);color:var(--ink);border-radius:16px;padding:14px 16px;display:flex;gap:12px;align-items:center}
+.goal-pill svg{width:28px;height:28px;color:var(--accent);flex:none}
+
+/* Plano */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;align-items:center;gap:8px;padding-block:6px;margin-top:-6px}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:700;font-size:1.3rem;margin-right:auto}
+.brand svg{width:34px;height:34px}
+.pill{display:flex;align-items:center;gap:5px;font-family:var(--display);font-weight:700;font-size:1.15rem;padding:6px 10px;border-radius:12px;font-variant-numeric:tabular-nums}
+.pill svg{width:22px;height:22px}
+.pill.fire{color:var(--accent)}
+.pill.pts{color:var(--warn-d)}
+.card{background:var(--surface);border:2px solid var(--line);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.goalcard .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.goalcard h2{font-size:1.25rem}
+.countdown{font-family:var(--display);font-weight:700;color:var(--accent);font-size:1.1rem;white-space:nowrap}
+.track{position:relative;height:30px;border-radius:15px;background:var(--track);overflow:hidden}
+.track::before{content:"";position:absolute;left:0;right:30px;top:50%;height:2px;margin-top:-1px;background:repeating-linear-gradient(90deg,var(--lane) 0 10px,transparent 10px 18px)}
+.track .fill{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:15px;min-width:30px;transition:width .5s ease;box-shadow:inset 0 -5px 0 rgba(0,0,0,.14)}
+.track .runner{position:absolute;top:3px;width:24px;height:24px;border-radius:50%;background:var(--surface);border:3px solid var(--accent-d);transform:translateX(-27px);transition:left .5s ease}
+.track .finish{position:absolute;right:0;top:0;bottom:0;width:22px;background:repeating-conic-gradient(var(--ink) 0 25%,var(--surface) 0 50%) 0 0/10px 10px}
+.trackmeta{display:flex;justify-content:space-between;font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.today h3{font-size:1.5rem}
+.today .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mins{font-family:var(--display);font-weight:700;background:var(--accent-soft);color:var(--accent-d);border-radius:12px;padding:4px 10px;white-space:nowrap;font-variant-numeric:tabular-nums}
+:root[data-theme="dark"] .mins{color:var(--accent)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .mins{color:var(--accent)}}
+.lvl{display:inline-flex;align-self:flex-start;gap:6px;align-items:center;background:var(--sky-soft);border-radius:10px;padding:4px 10px;font-weight:800;font-size:.9rem}
+.wsteps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;counter-reset:s}
+.wsteps li{display:flex;gap:10px;align-items:flex-start;counter-increment:s}
+.wsteps li::before{content:counter(s);flex:none;width:24px;height:24px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;font-size:.8rem;font-weight:900;color:var(--muted)}
+.wsteps li.main{font-weight:900}
+.wsteps li.main::before{background:var(--accent);color:var(--on-accent)}
+.restcard{flex-direction:row;align-items:center;gap:14px}
+.restcard svg{width:64px;height:64px;flex:none}
+.pending{background:var(--stop-soft);border-radius:14px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;border:0;width:100%;cursor:pointer;text-align:left;color:var(--ink)}
+
+/* Semáforo */
+.sem{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.sbtn{border:0;border-radius:18px;min-height:92px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-weight:900;font-size:.95rem;line-height:1.15;text-align:center;transition:transform .07s,box-shadow .07s}
+.sbtn svg{width:34px;height:34px}
+.sbtn:active{transform:translateY(5px);box-shadow:none!important}
+.sbtn.g{background:var(--go);color:var(--on-accent);box-shadow:0 5px 0 var(--go-d)}
+.sbtn.y{background:var(--warn);color:var(--warn-ink);box-shadow:0 5px 0 var(--warn-d)}
+.sbtn.r{background:var(--stop);color:var(--on-accent);box-shadow:0 5px 0 var(--stop-d)}
+.sem.red{grid-template-columns:1fr 1fr}
+.sbtn.r2{background:var(--stop-soft);color:var(--ink);box-shadow:0 5px 0 var(--stop);border:2px solid var(--stop)}
+.sbtn small{font-weight:700;color:var(--muted);font-size:.8rem}
+.logged{display:flex;align-items:center;gap:12px;border-radius:16px;padding:12px 14px;font-weight:900}
+.logged svg{width:28px;height:28px;flex:none}
+.logged.g{background:var(--go-soft)} .logged.g svg{color:var(--go)}
+.logged.y{background:var(--warn-soft)} .logged.y svg{color:var(--warn-d)}
+.logged.r{background:var(--stop-soft)} .logged.r svg{color:var(--stop)}
+.logged .link{margin-left:auto}
+.future{color:var(--muted);background:var(--surface-2);border-radius:14px;padding:12px 14px;text-align:center}
+
+/* Calendário */
+.sect{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.sect h2{font-size:1.3rem}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.cal .wd{text-align:center;font-size:.75rem;font-weight:900;color:var(--muted);padding-bottom:2px}
+.cell{aspect-ratio:1;max-width:100%;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900;font-size:.95rem;border:0;background:transparent;color:var(--ink);position:relative;font-variant-numeric:tabular-nums;cursor:pointer;padding:0;line-height:1}
+.cell em{font-style:normal;font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em;margin-top:1px}
+.cell.out{color:var(--line);cursor:default}
+.cell.rest{color:var(--muted)}
+.cell.train{background:var(--surface);box-shadow:inset 0 0 0 3px var(--accent)}
+.cell.train.hard{box-shadow:inset 0 0 0 3px var(--accent),inset 0 0 0 6px var(--accent-soft)}
+.cell.g{background:var(--go);color:var(--on-accent);box-shadow:0 3px 0 var(--go-d)}
+.cell.y{background:var(--warn);color:var(--warn-ink);box-shadow:0 3px 0 var(--warn-d)}
+.cell.r{background:var(--stop);color:var(--on-accent);box-shadow:0 3px 0 var(--stop-d)}
+.cell.miss{background:var(--stop-soft);box-shadow:inset 0 0 0 3px var(--stop)}
+.cell.race{background:var(--ink);color:var(--bg)}
+.cell.race.g{background:var(--go);color:var(--on-accent)}
+.cell.race.y{background:var(--warn);color:var(--warn-ink)}
+.cell.today::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:3px solid var(--sky)}
+.cell .rp{position:absolute;top:-2px;right:-2px;width:14px;height:14px;border-radius:50%;background:var(--sky);border:2px solid var(--surface)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:.82rem;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:14px;height:14px;border-radius:50%;display:inline-block}
+
+/* Conquistas */
+.badges{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.badge{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;font-size:.78rem;font-weight:800;color:var(--muted)}
+.medal{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);color:var(--line);box-shadow:0 4px 0 var(--line)}
+.medal svg{width:32px;height:32px}
+.badge.got{color:var(--ink)}
+.badge.got .medal{color:var(--on-accent)}
+.badge.got.b0 .medal{background:var(--go);box-shadow:0 4px 0 var(--go-d)}
+.badge.got.b1 .medal{background:var(--sky);box-shadow:0 4px 0 var(--sky-d)}
+.badge.got.b2 .medal{background:var(--grape);box-shadow:0 4px 0 var(--grape-d)}
+.badge.got.b3 .medal{background:var(--accent);box-shadow:0 4px 0 var(--accent-d)}
+
+/* Como funciona */
+details.how{background:var(--surface);border:2px solid var(--line);border-radius:20px;padding:4px 16px}
+details.how summary{cursor:pointer;font-family:var(--display);font-weight:600;font-size:1.1rem;padding:12px 0;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.how summary::-webkit-details-marker{display:none}
+details.how summary::after{content:"+";font-size:1.5rem;color:var(--sky)}
+details.how[open] summary::after{content:"−"}
+.how-body{display:flex;flex-direction:column;gap:14px;padding-bottom:16px;font-weight:600}
+.how-body ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.vol{overflow-x:auto}
+.vol table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem}
+.vol th,.vol td{padding:6px 6px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+.vol th{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.loglist{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.loglist li{background:var(--surface-2);border-radius:12px;padding:8px 12px;font-size:.92rem}
+
+/* Folha inferior, toast, comemoração */
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:520px;border-radius:26px 26px 0 0;max-height:88vh;overflow-y:auto;padding:10px max(16px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px;animation:up .22s ease}
+@keyframes up{from{transform:translateY(40px);opacity:.4}}
+.grab{width:44px;height:5px;border-radius:9px;background:var(--line);align-self:center}
+.sheet-h{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.sheet-h h3{font-size:1.5rem}
+.tag{display:inline-block;border-radius:8px;padding:3px 8px;font-size:.75rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase;background:var(--accent-soft);color:var(--ink)}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:30;background:var(--ink);color:var(--bg);border-radius:16px;padding:12px 16px;font-weight:800;width:min(440px,calc(100% - 32px));box-shadow:0 8px 24px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:2px;animation:up .2s ease}
+.toast small{font-weight:700;opacity:.8}
+.party{position:fixed;inset:0;z-index:40;background:var(--scrim);display:grid;place-items:center;padding:24px}
+.party .box{background:var(--surface);border-radius:28px;padding:28px 22px 22px;max-width:360px;width:100%;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;animation:pop .35s cubic-bezier(.3,1.6,.6,1)}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+.party .medal{width:110px;height:110px}
+.party .medal svg{width:56px;height:56px}
+.conf{position:fixed;top:-12px;width:10px;height:14px;border-radius:3px;z-index:41;animation:fall 1.6s ease-in forwards;pointer-events:none}
+@keyframes fall{to{transform:translateY(105vh) rotate(540deg)}}
+.settings-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.settings-row .btn{width:auto;flex:1;font-size:.95rem;padding:12px 10px;text-transform:none}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <!-- 0. Tela inicial -->
+  <section class="screen" id="scr-home">
+    <div class="hero">
+      <svg viewBox="0 0 120 120" aria-hidden="true" class="mascot"></svg>
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+        <div class="bubble">Bora? Eu te levo até a linha de chegada.</div>
+      </div>
+    </div>
+    <h1>Qual é a sua meta?</h1>
+    <div class="dist-grid">
+      <button class="dist d2" data-dist="2"><b>2<small>km</small></b><span>Primeiro passo</span></button>
+      <button class="dist d5" data-dist="5"><b>5<small>km</small></b><span>A clássica</span></button>
+      <button class="dist d10" data-dist="10"><b>10<small>km</small></b><span>Desafio</span></button>
+      <button class="dist d21" data-dist="21"><b>21<small>km</small></b><span>Meia maratona</span></button>
+    </div>
+    <button class="example" id="btn-example">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5l11 7-11 7z"/></svg>
+      <span><b>Ver exemplo pronto</b><br><span class="muted">Nunca corri · prova de 5 km em 8/nov</span></span>
+    </button>
+  </section>
+
+  <!-- 1. Dias por semana -->
+  <section class="screen" id="scr-days" hidden>
+    <div class="obar"><button class="iconbtn" data-back aria-label="Voltar"></button><div class="steps-bar"><i style="width:25%"></i></div></div>
+    <h1 class="q">Quantos dias por semana você pode treinar?</h1>
+    <div class="opts four days" id="days-opts">
+      <button class="opt" data-days="2"><span class="big">2</span><span class="s">dias</span></button>
+      <button class="opt" data-days="3"><span class="big">3</span><span class="s">dias</span></button>
+      <button class="opt" data-days="4"><span class="big">4</span><span class="s">dias</span></button>
+      <button class="opt" data-days="5"><span class="big">5</span><span class="s">dias</span></button>
+    </div>
+    <p class="muted" style="margin:0">Treinos de 20 a 40 minutos. Dá para encaixar antes do trabalho.</p>
+  </section>
+
+  <!-- 2. Data da prova -->
+  <section class="screen" id="scr-date" hidden>
+    <div class="obar"><button class="iconbtn" data-back aria-label="Voltar"></button><div class="steps-bar"><i style="width:50%"></i></div></div>
+    <h1 class="q">Quando é a prova?</h1>
+    <div class="date-card">
+      <label for="race-date" class="eyebrow">Data da prova</label>
+      <input type="date" id="race-date">
+      <div class="date-big" id="date-pretty"></div>
+      <div class="err" id="date-err" hidden></div>
+    </div>
+    <div class="foot">
+      <button class="btn" id="date-next" disabled>Continuar</button>
+      <button class="btn ghost" id="date-none">Ainda não tenho data</button>
+    </div>
+  </section>
+
+  <!-- 3. Anamnese -->
+  <section class="screen" id="scr-health" hidden>
+    <div class="obar"><button class="iconbtn" data-back aria-label="Voltar"></button><div class="steps-bar"><i style="width:75%"></i></div></div>
+    <h1 class="q">Conta um pouco sobre você</h1>
+    <div class="field-row">
+      <div class="field"><label for="age">Idade</label><div class="in"><input id="age" type="number" inputmode="numeric" min="12" max="99" placeholder="35"><span class="u">anos</span></div></div>
+      <div class="field"><label for="weight">Peso</label><div class="in"><input id="weight" type="number" inputmode="decimal" min="30" max="250" placeholder="70"><span class="u">kg</span></div></div>
+    </div>
+    <div class="sub">Você já corre?</div>
+    <div class="opts" id="exp-opts">
+      <button class="opt" data-exp="never"><span class="t">Nunca corri</span><span class="s">Vou começar do zero</span></button>
+      <button class="opt" data-exp="sometimes"><span class="t">Corro às vezes</span><span class="s">Sem constância</span></button>
+      <button class="opt" data-exp="often"><span class="t">Corro com frequência</span><span class="s">2 ou mais vezes por semana</span></button>
+    </div>
+    <div class="sub">Algum problema de saúde?</div>
+    <div class="chips" id="health-opts">
+      <button class="chip-btn" data-h="none">Nenhum</button>
+      <button class="chip-btn" data-h="cardiac">Cardíaco</button>
+      <button class="chip-btn" data-h="joint">Articular</button>
+      <button class="chip-btn" data-h="other">Outro</button>
+    </div>
+    <div class="err" id="health-err" hidden></div>
+    <div class="foot"><button class="btn" id="health-next">Montar meu plano</button></div>
+  </section>
+
+  <!-- 4. Gerando -->
+  <section class="screen" id="scr-gen" hidden>
+    <div class="gen"><svg viewBox="0 0 120 120" aria-hidden="true" class="mascot"></svg><h1 style="font-size:1.6rem">Montando seu plano…</h1><p class="muted" id="gen-msg" style="margin:0">Distribuindo treinos e descansos</p></div>
+  </section>
+
+  <!-- 5. Resumo -->
+  <section class="screen" id="scr-summary" hidden></section>
+
+  <!-- 6. Plano -->
+  <section class="screen" id="scr-plan" hidden></section>
+</div>
+<div id="layer"></div>
+
+<script>
+/*ENGINE-START*/
+const Engine = (() => {
+  const DAY = 86400000;
+  const toNum = s => { const [y,m,d] = s.split('-').map(Number); return Math.round(Date.UTC(y,m-1,d)/DAY); };
+  const toStr = n => new Date(n*DAY).toISOString().slice(0,10);
+  const dow = n => new Date(n*DAY).getUTCDay();
+  const realToday = () => { const d = new Date(); return Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())/DAY); };
+  const fmtDay = n => new Intl.DateTimeFormat('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit',timeZone:'UTC'}).format(new Date(n*DAY)).replace(/\./g,'');
+
+  // Escada de níveis: corrida/caminhada em segundos. Nível 9 = corrida contínua.
+  const LEVELS = [null,
+    {r:60,w:120},{r:60,w:90},{r:120,w:120},{r:180,w:120},{r:300,w:120},
+    {r:480,w:120},{r:600,w:90},{r:900,w:60},{cont:true}];
+  const MAXL = 9;
+  const KM = {2:2,5:5,10:10,21:21.1};
+  const DLABEL = {2:'2 km',5:'5 km',10:'10 km',21:'21 km'};
+  // Semanas recomendadas para correr a distância sem parar
+  const REC = {never:{2:7,5:9,10:14,21:24}, sometimes:{2:4,5:6,10:10,21:16}, often:{2:2,5:3,10:6,21:12}};
+  const BASE = {never:30, sometimes:35, often:40};          // minutos de um treino leve na semana 1
+  const START = {never:1, sometimes:5, often:9};
+  const RUNPACE = {never:7.5, sometimes:6.8, often:5.8};    // min/km
+  const WALKPACE = 11;
+  const VMAX = {2:100,5:150,10:210,21:300};                 // teto semanal (min)
+  const LONGCAP = {2:50,5:70,10:100,21:150};
+  const W = {E:1, L:1.4, Q:1};
+  const PRIO = {E:1, T:1, Q:1.5, L:2};
+
+  const fmtSec = s => s%60===0 ? `${s/60} min` : `${Math.floor(s/60)}min${String(s%60).padStart(2,'0')}`;
+  const levelLabel = L => LEVELS[L].cont ? 'corrida contínua' : `${fmtSec(LEVELS[L].r)} correndo / ${fmtSec(LEVELS[L].w)} andando`;
+
+  function pattern(days, exp){
+    const beginner = exp !== 'often';
+    const n = beginner ? Math.min(days,3) : days;
+    const map = {2:[2,6],3:[2,4,6],4:[2,4,6,0],5:[1,2,4,6,0]};
+    return {n, wd:map[n], longDay: n>=4 ? 0 : 6, qDay: (!beginner && n>=3) ? 4 : null, beginner, capped: beginner && days>3};
+  }
+  const typeFor = (d,p) => d===p.longDay ? 'L' : d===p.qDay ? 'Q' : 'E';
+  const isHard = x => !!x && (x.frozen ? x.frozen.hard : (x.type==='L'||x.type==='Q'));
+
+  function estRace(L, exp, km){
+    const lv = LEVELS[L];
+    if (lv.cont) return km*RUNPACE[exp];
+    const speed = (lv.r/RUNPACE[exp] + lv.w/WALKPACE)/(lv.r+lv.w);
+    return km/speed;
+  }
+
+  function materialize(type, L, tg, exp){
+    let target = tg[type];
+    const lv = LEVELS[L];
+    if (type==='Q' && !lv.cont){ type='E'; target=Math.min(tg.E, 47); }   // sem tiros enquanto houver pausas de caminhada
+    const titles = {E:'Treino leve', L:'Longão', Q:'Tiros curtos', T:'Polimento'};
+    if (type==='Q' && target < 27){ type='E'; }
+    if (type==='Q'){
+      const k = Math.max(3, Math.min(8, Math.floor((target-15)/4)));
+      return {type, level:L, title:titles.Q, hard:true, minutes:15+k*4,
+        steps:['10 min de trote leve', `${k}× (2 min forte + 2 min trote)`, '5 min de trote leve'], main:1};
+    }
+    if (lv.cont){
+      if (exp==='often'){
+        const m = Math.max(15, Math.floor(target));
+        return {type, level:L, title:titles[type], hard:type==='L', minutes:m,
+          steps:['Comece bem devagar nos 5 primeiros min', `${m} min de corrida leve no total`, 'Ritmo de conversa: dá para falar frases curtas'], main:1};
+      }
+      const run = Math.max(10, Math.floor(target-10));
+      return {type, level:L, title:titles[type], hard:type==='L', minutes:run+10,
+        steps:['5 min caminhando para aquecer', `${run} min correndo leve, sem parar`, '5 min caminhando para soltar'], main:1};
+    }
+    const unit = (lv.r+lv.w)/60;
+    const main = Math.max(unit, target-10);
+    const reps = Math.max(1, Math.floor(main/unit));
+    const extra = Math.min(Math.floor(main - reps*unit), Math.floor(lv.r/60));   // sobra vira um último trecho correndo
+    const tail = extra>=2 ? ` e mais ${extra} min correndo` : '';
+    return {type, level:L, title:titles[type], hard:type==='L', minutes:Math.round((10+reps*unit+(tail?extra:0))*10)/10,
+      steps:['5 min caminhando para aquecer', `${reps}× (${fmtSec(lv.r)} correndo + ${fmtSec(lv.w)} andando)${tail}`, '5 min caminhando para soltar'], main:1};
+  }
+
+  function raceSession(L, exp, dist, day){
+    const lv = LEVELS[L];
+    const est = Math.round(estRace(L, exp, KM[dist]));
+    const steps = lv.cont
+      ? ['Aqueça com 5 min de caminhada', `Corra os ${DLABEL[dist]} em ritmo de conversa`, 'Cansou? Caminhe 1 min e volte a correr']
+      : ['Aqueça com 5 min de caminhada', `Repita ${fmtSec(lv.r)} correndo + ${fmtSec(lv.w)} andando até a chegada`, 'Largue devagar: o primeiro km engana'];
+    return {type:'R', day, level:L, title:`Dia da prova: ${DLABEL[dist]}`, steps, minutes:est, est, hard:true, main:1};
+  }
+
+  function build(p, fb, today){
+    fb = fb || {};
+    const start = p.start, race = toNum(p.race), D = race - start;
+    const exp = p.exp, dist = p.dist, km = KM[dist];
+    const pat = pattern(p.days, exp);
+    const health = p.health || {};
+    const conservative = p.age>=60 || p.weight>=100 || !!health.joint;
+    const startL = (exp==='sometimes' && conservative) ? 4 : START[exp];
+    let L = startL;
+    const base = Math.round(BASE[exp]*(conservative?0.85:1));
+    const types = pat.wd.map(d=>typeFor(d,pat));
+    const sumW = types.reduce((s,t)=>s+W[t],0);
+    const nE = types.filter(t=>t==='E').length, nQ = types.filter(t=>t==='Q').length;
+    const easyCap = exp==='often' ? 60 : 50;
+    const vmax = VMAX[dist]*(exp==='often'?1.3:1);
+    // Semanas contadas de trás para frente: a última semana termina no dia da prova (polimento).
+    const offset = (7 - ((D+1)%7)) % 7;
+    const weeks = [];
+    for (let i=0;i<=D;i++){ const k=Math.floor((i+offset)/7); if(!weeks[k]) weeks[k]={k,days:[]}; weeks[k].days.push(start+i); }
+    const nWeeks = weeks.length;
+    const fbOf = day => fb[toStr(day)];
+
+    let V = base*sumW, lastE = base, lastLogged = null;
+    const sessions=[], log=[], weekInfo=[];
+    let prevSess = null;
+
+    for (const wk of weeks){
+      const taper = wk.k===nWeeks-1;
+      const full = wk.days.length===7;
+      const slots = [];
+      for (const day of wk.days){
+        if (day===race){ slots.push({day,type:'R'}); continue; }
+        const d = dow(day);
+        if (!pat.wd.includes(d)) continue;
+        if (taper && day===race-1) continue;          // véspera da prova é sempre descanso
+        slots.push({day, type: taper ? 'T' : typeFor(d,pat)});
+      }
+      const e = Math.min(easyCap, V/sumW);
+      const tg = {E:e, Q:e, L:Math.min(LONGCAP[dist], Math.max(e*1.15, V - nE*e - nQ*e)), T:Math.max(15, lastE*0.7)};
+      const levelStart = L;
+      const queue = slots.filter(s=>s.type!=='R').map(s=>({type:s.type, prio:PRIO[s.type]}));
+      let regressed=false, hold=false, actual=0, done=0, didAny=false;
+      const nTrain = queue.length;
+
+      for (let si=0; si<slots.length; si++){
+        const s = slots[si];
+        if (s.type==='R'){
+          const sess = raceSession(L, exp, dist, s.day);
+          sess.week = wk.k; sess.taper = true; sessions.push(sess); prevSess = sess; continue;
+        }
+        const left = slots.slice(si).filter(x=>x.type!=='R').length;
+        while (queue.length > left){
+          let mi = queue.length-1;
+          for (let j=queue.length-1;j>=0;j--) if (queue[j].prio < queue[mi].prio) mi=j;
+          const [rm] = queue.splice(mi,1);
+          if (rm.type==='L' && !rm.frozen) log.push({day:s.day, msg:`Semana ${wk.k+1}: o longão deu lugar ao treino repetido.`});
+        }
+        const prevHard = prevSess && prevSess.day===s.day-1 && prevSess.hard && fbOf(prevSess.day)!=='rf';
+        let idx = 0;
+        if (prevHard && isHard(queue[0])){ const j = queue.findIndex(x=>!isHard(x)); if (j>0) idx=j; }
+        const item = queue.splice(idx,1)[0];
+        let sess;
+        if (prevHard && isHard(item)){
+          sess = materialize('E', L, tg, exp);
+          log.push({day:s.day, msg:`${fmtDay(s.day)}: virou treino leve para não ter dois treinos fortes seguidos.`});
+        } else if (item.frozen){
+          sess = Object.assign({}, item.frozen, {repeat:true});
+        } else sess = materialize(item.type, L, tg, exp);
+        sess.day = s.day; sess.week = wk.k; sess.taper = taper;
+        sessions.push(sess); prevSess = sess;
+
+        const f = fbOf(s.day);
+        actual += sess.minutes;
+        if (f!=='rf') done += sess.minutes;
+        if (f==='g'||f==='y'||f==='rn') didAny = true;
+        if (f==='rf'){
+          const fr = Object.assign({}, sess); delete fr.day; delete fr.week; delete fr.taper; delete fr.repeat;
+          queue.unshift({type:sess.type, frozen:fr, prio:3});
+          log.push({day:s.day, msg:`${fmtDay(s.day)} ficou para trás: esse treino se repete no próximo dia de treino.`});
+        }
+        if (f==='rn'){
+          regressed = true;
+          if (L>1){ L--; log.push({day:s.day, msg:`${fmtDay(s.day)} não rolou: voltamos para o nível ${L} (${levelLabel(L)}).`}); }
+          else log.push({day:s.day, msg:`${fmtDay(s.day)} não rolou: seguimos no nível 1, com calma.`});
+        }
+        if (f==='y' && lastLogged==='y'){
+          hold = true;
+          log.push({day:s.day, msg:`Dois amarelos seguidos: a próxima semana repete o nível ${L}.`});
+        }
+        lastLogged = f || null;
+      }
+      if (queue.some(x=>x.frozen)) log.push({day:wk.days[wk.days.length-1], msg:`O treino que ficou para trás não coube na semana ${wk.k+1}. Seguimos o plano.`});
+
+      weekInfo.push({k:wk.k, n:wk.k+1, taper, full, level:levelStart, endLevel:L, target:Math.round(V), actual:Math.round(actual), done:Math.round(done), first:wk.days[0], last:wk.days[wk.days.length-1], count:nTrain});
+
+      if (!taper){
+        const refV = full ? Math.min(V, actual) : V;   // base dos +10%: volume planejado da semana anterior
+        const pastWeek = wk.days[wk.days.length-1] < today;
+        if (nTrain===0){ /* semana sem dias de treino: nada muda */ }
+        else if (regressed || hold){ V = Math.min(vmax, V, refV*1.1); }   // mantém o volume, sem encolher por arredondamento
+        else if (pastWeek && !didAny){
+          V = Math.min(vmax, V, refV*1.1);
+          log.push({day:wk.days[wk.days.length-1], msg:`Semana ${wk.k+1} sem treinos feitos: o nível ${L} se mantém.`});
+        } else { L = Math.min(MAXL, L+1); V = Math.min(vmax, refV*1.1); }
+        lastE = e;
+      }
+    }
+
+    const rec = REC[exp][dist], weeksAvail = D/7;
+    const finalL0 = Math.min(MAXL, startL + Math.max(0, nWeeks-1));
+    const lv0 = LEVELS[finalL0];
+    const reach = lv0.cont || (lv0.r/60) >= km*RUNPACE[exp];
+    const completion = weeksAvail < rec || !reach;
+    const goalText = completion
+      ? (exp==='often' ? `Completar os ${DLABEL[dist]} com conforto, caminhando se precisar` : `Completar os ${DLABEL[dist]} alternando corrida e caminhada`)
+      : (exp==='often' ? `Correr os ${DLABEL[dist]} com conforto` : `Correr os ${DLABEL[dist]} sem parar`);
+    return {sessions, weeks:weekInfo, log, meta:{start, race, D, nWeeks, rec, weeksAvail, completion, veryShort: weeksAvail < rec*0.4 && dist>=10, goalText, pat, conservative, startL, base, dist, exp, label:DLABEL[dist]}};
+  }
+
+  function stats(plan, fb, today){
+    let streak=0, best=0, points=0, done=0;
+    for (const s of plan.sessions){
+      if (s.day > today) break;
+      const f = fb[toStr(s.day)];
+      if (f==='g'||f==='y'){ streak++; points+=10; done++; }
+      else if (f==='rn'){ streak++; points+=5; }
+      else if (f==='rf' || s.day < today){ streak=0; }
+      best = Math.max(best, streak);
+    }
+    let weekDone = false;
+    for (const w of plan.weeks){
+      const ws = plan.sessions.filter(s=>s.week===w.k && s.type!=='R');
+      if (ws.length && ws.every(s=>{ const f=fb[toStr(s.day)]; return f==='g'||f==='y'; })){ points+=20; weekDone=true; }
+    }
+    const total = plan.sessions.length;
+    const rf = fb[toStr(plan.meta.race)];
+    const badges = [
+      {id:'first', name:'Primeiro treino', got: done>=1},
+      {id:'week', name:'Semana completa', got: weekDone},
+      {id:'half', name:'Metade do caminho', got: done >= Math.ceil(total/2)},
+      {id:'race', name:'Dia da prova', got: rf==='g'||rf==='y'}
+    ];
+    return {streak, best, points, done, total, badges};
+  }
+
+  return {build, stats, toNum, toStr, dow, realToday, fmtDay, levelLabel, LEVELS, REC, DLABEL, pattern};
+})();
+/*ENGINE-END*/
+
+/* ================= Interface ================= */
+const E = Engine, DAY = 86400000;
+const STORE = 'boraCorrer.v1';
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+function load(){ try { const t = localStorage.getItem(STORE); return t ? JSON.parse(t) : null; } catch(e){ return null; } }
+function save(){ try { localStorage.setItem(STORE, JSON.stringify(S)); } catch(e){} }
+let S = load() || {profile:null, fb:{}, sim:0, seen:{}};
+S.fb = S.fb || {}; S.seen = S.seen || {}; S.sim = S.sim || 0;
+const today = () => E.realToday() + (S.sim||0);
+const fmt = (n, o) => new Intl.DateTimeFormat('pt-BR', Object.assign({timeZone:'UTC'}, o)).format(new Date(n*DAY)).replace(/\./g,'');
+const fmtLong = n => fmt(n,{weekday:'long',day:'numeric',month:'long'});
+const fmtDM = n => fmt(n,{day:'2-digit',month:'2-digit'});
+
+const ICON = {
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+  fire:'<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12.6 2c.6 3.7 4.9 5.6 4.9 10.6A5.5 5.5 0 0 1 6.5 13c0-2.3 1-3.9 2.3-5 .1 1.7.9 2.9 2.1 3.4-.2-3.6.6-6.6 1.7-9.4z"/></svg>',
+  star:'<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4l-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z"/></svg>',
+  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M4 7h9M19 7h1M4 17h3M13 17h7"/><circle cx="16" cy="7" r="2.6"/><circle cx="10" cy="17" r="2.6"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  wave:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M3.5 13c2.6-3.2 5.4-3.2 8.5 0s5.9 3.2 8.5 0"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>',
+  flag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4h11l-2.2 4L17 12H6"/></svg>',
+  alert:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5L2.8 19.5h18.4z"/><path d="M12 10v4M12 17v.01"/></svg>',
+  heart:'<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 20.5s-8-4.9-8-11A4.5 4.5 0 0 1 12 6.6a4.5 4.5 0 0 1 8 2.9c0 6.1-8 11-8 11z"/></svg>',
+  info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg>',
+  shoe:'<svg viewBox="0 0 24 24"><path fill="currentColor" d="M2.5 16.5c0-3 .8-7.5 2.2-9.5l3.2 1.1c.8 1.8 2.6 3 5.4 3.5 3.6.6 7.2 1.6 8.2 4.4v2.5H2.5z"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M8.5 13.5l2.5 2.5 4.5-5"/></svg>',
+  half:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2.6"/><path fill="currentColor" d="M12 4a8 8 0 0 1 0 16z"/></svg>',
+  medal:'<svg viewBox="0 0 24 24"><path fill="currentColor" d="M7 2h4l1.5 5-2.6 1.8zM17 2h-4l-1.5 5 2.6 1.8z"/><circle cx="12" cy="15" r="6.5" fill="currentColor"/><path d="M12 11.6l1.1 2.2 2.4.3-1.8 1.7.5 2.4-2.2-1.2-2.2 1.2.5-2.4-1.8-1.7 2.4-.3z" fill="var(--surface)"/></svg>'
+};
+const BADGE_ICON = {first:ICON.shoe, week:ICON.cal, half:ICON.half, race:ICON.medal};
+
+const MASCOT = `<ellipse cx="60" cy="112" rx="30" ry="5" fill="var(--line)"/>
+<rect x="42" y="88" width="12" height="20" rx="6" fill="var(--accent-d)"/><rect x="66" y="88" width="12" height="20" rx="6" fill="var(--accent-d)"/>
+<rect x="36" y="102" width="22" height="9" rx="4.5" fill="var(--sky)"/><rect x="62" y="102" width="22" height="9" rx="4.5" fill="var(--sky)"/>
+<circle cx="60" cy="56" r="40" fill="var(--accent)"/>
+<path d="M29.6 30H90.4L97.5 42H22.5Z" fill="var(--sky)"/>
+<path d="M99 36 l14 -6 -2 10z M99 38 l12 6 -12 2z" fill="var(--sky)"/>
+<circle cx="46" cy="60" r="9.5" fill="#fff"/><circle cx="74" cy="60" r="9.5" fill="#fff"/>
+<circle cx="48.5" cy="61" r="5" fill="#17202E"/><circle cx="76.5" cy="61" r="5" fill="#17202E"/>
+<circle cx="50" cy="59" r="1.7" fill="#fff"/><circle cx="78" cy="59" r="1.7" fill="#fff"/>
+<path d="M50 77 Q60 86 70 77" fill="none" stroke="#17202E" stroke-width="4" stroke-linecap="round"/>
+<circle cx="36" cy="74" r="4.5" fill="var(--accent-d)" opacity=".45"/><circle cx="84" cy="74" r="4.5" fill="var(--accent-d)" opacity=".45"/>`;
+$$('svg.mascot').forEach(s=>s.innerHTML = MASCOT);
+$$('[data-back]').forEach(b=>b.innerHTML = ICON.back);
+
+/* ---------- navegação ---------- */
+const SCREENS = ['home','days','date','health','gen','summary','plan'];
+const history_ = [];
+function go(name, push=true){
+  const cur = SCREENS.find(s=>!$('#scr-'+s).hidden);
+  if (push && cur && cur!==name && cur!=='gen') history_.push(cur);
+  SCREENS.forEach(s => $('#scr-'+s).hidden = s!==name);
+  window.scrollTo(0,0);
+}
+$$('[data-back]').forEach(b => b.addEventListener('click', ()=>{ const p = history_.pop() || 'home'; go(p,false); }));
+
+/* ---------- onboarding ---------- */
+let draft = {};
+$$('[data-dist]').forEach(b => b.addEventListener('click', ()=>{
+  draft = {dist:+b.dataset.dist, health:{}};
+  $$('#days-opts .opt').forEach(o=>o.setAttribute('aria-pressed','false'));
+  go('days');
+}));
+$$('#days-opts .opt').forEach(b => b.addEventListener('click', ()=>{
+  $$('#days-opts .opt').forEach(o=>o.setAttribute('aria-pressed', String(o===b)));
+  draft.days = +b.dataset.days;
+  setTimeout(()=>{ prepDate(); go('date'); }, 160);
+}));
+
+function prepDate(){
+  const inp = $('#race-date');
+  inp.min = E.toStr(today()+2);
+  if (draft.race) inp.value = draft.race;
+  checkDate();
+}
+function checkDate(){
+  const v = $('#race-date').value, err = $('#date-err'), pretty = $('#date-pretty');
+  err.hidden = true; pretty.textContent = '';
+  if (!v){ $('#date-next').disabled = true; return; }
+  const n = E.toNum(v), t = today();
+  if (n < t+2){ err.textContent = n<=t ? 'Escolha uma data a partir de depois de amanhã.' : 'Precisamos de pelo menos 2 dias até a prova.'; err.hidden=false; $('#date-next').disabled = true; return; }
+  const d = n - t;
+  pretty.textContent = `${fmtLong(n)} · faltam ${d} dias`;
+  $('#date-next').disabled = false;
+}
+$('#race-date').addEventListener('input', checkDate);
+$('#date-next').addEventListener('click', ()=>{ draft.race = $('#race-date').value; draft.noDate = false; go('health'); });
+$('#date-none').addEventListener('click', ()=>{ draft.race = null; draft.noDate = true; go('health'); });
+
+$$('#exp-opts .opt').forEach(b => b.addEventListener('click', ()=>{
+  $$('#exp-opts .opt').forEach(o=>o.setAttribute('aria-pressed', String(o===b)));
+  draft.exp = b.dataset.exp;
+}));
+$$('#health-opts .chip-btn').forEach(b => b.addEventListener('click', ()=>{
+  const h = b.dataset.h; draft.health = draft.health || {};
+  if (h==='none'){ draft.health = {none:true}; }
+  else { delete draft.health.none; draft.health[h] = !draft.health[h]; }
+  $$('#health-opts .chip-btn').forEach(o=>o.setAttribute('aria-pressed', String(!!draft.health[o.dataset.h])));
+}));
+$('#health-next').addEventListener('click', ()=>{
+  const age = +$('#age').value, w = +$('#weight').value, err = $('#health-err');
+  const h = draft.health || {};
+  let msg = '';
+  if (!(age>=12 && age<=99)) msg = 'Informe sua idade (12 a 99 anos).';
+  else if (!(w>=30 && w<=250)) msg = 'Informe seu peso (30 a 250 kg).';
+  else if (!draft.exp) msg = 'Diga se você já corre.';
+  else if (!h.none && !h.cardiac && !h.joint && !h.other) msg = 'Marque "Nenhum" ou o problema de saúde.';
+  err.textContent = msg; err.hidden = !msg;
+  if (msg) return;
+  draft.age = age; draft.weight = w;
+  if (h.cardiac) cardiacWarning(); else generate();
+});
+
+function cardiacWarning(){
+  openModal(`<div class="grab"></div>
+    <div class="note stop">${ICON.heart}<div><p><b>Antes de começar, fale com um médico.</b></p><p>Com histórico cardíaco, o ideal é ter liberação médica (de preferência de um cardiologista) antes do primeiro treino.</p></div></div>
+    <p style="margin:0" class="muted">Seu plano fica pronto agora. Use-o depois de ter o ok do médico.</p>
+    <button class="btn" data-act="cardiac-ok">Entendi</button>`);
+}
+
+function generate(){
+  const t = today();
+  let race = draft.race;
+  if (!race){
+    // sem data: duração recomendada para a distância, terminando num domingo
+    const rec = E.REC[draft.exp][draft.dist];
+    let n = t + rec*7; while (E.dow(n)!==0) n++;
+    race = E.toStr(n);
+  }
+  S.profile = {dist:draft.dist, days:draft.days, race, noDate:!!draft.noDate, age:draft.age, weight:draft.weight, exp:draft.exp, health:draft.health||{}, start:t};
+  S.fb = {}; S.seen = {};
+  save();
+  go('gen');
+  const msgs = ['Distribuindo treinos e descansos','Calculando o volume semana a semana','Guardando a última semana para o polimento'];
+  let i=0; const iv = setInterval(()=>{ i++; if (msgs[i]) $('#gen-msg').textContent = msgs[i]; }, 450);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  setTimeout(()=>{ clearInterval(iv); renderSummary(); go('summary'); }, reduce ? 300 : 1400);
+}
+
+$('#btn-example').addEventListener('click', ()=>{
+  const t = today();
+  let race = '2026-11-08';
+  if (E.toNum(race) < t+7) race = E.toStr(t+20);
+  draft = {dist:5, days:3, race, noDate:false, age:35, weight:78, exp:'never', health:{none:true}};
+  generate();
+});
+
+/* ---------- resumo ---------- */
+let plan = null;
+function recompute(){ plan = S.profile ? E.build(S.profile, S.fb, today()) : null; }
+
+function renderSummary(){
+  recompute();
+  const m = plan.meta, p = S.profile;
+  const train = plan.sessions.filter(s=>s.type!=='R');
+  const first = train[0];
+  const wk = Math.max(1, Math.round(m.D/7));
+  const notes = [];
+  if (m.completion && p.exp!=='often'){
+    notes.push(`<div class="note warn">${ICON.info}<div><p><b>Vamos ajustar o objetivo.</b></p><p>Para correr ${m.label} sem parar, o ideal seriam umas ${m.rec} semanas, e faltam ${m.D} dias. Dá para chegar lá alternando corrida e caminhada, que é uma ótima primeira prova.</p>${m.veryShort?`<p>Se puder escolher, uma distância menor nesta prova seria mais confortável.</p>`:''}</div></div>`);
+  } else if (m.completion){
+    notes.push(`<div class="note warn">${ICON.info}<div><p><b>Prazo curto para buscar tempo.</b></p><p>O foco é chegar inteiro: ritmo confortável e pausas de caminhada se precisar.</p></div></div>`);
+  }
+  if (p.health.cardiac) notes.push(`<div class="note stop">${ICON.heart}<div><p><b>Comece só com liberação médica.</b></p></div></div>`);
+  if (m.pat.capped) notes.push(`<div class="note info">${ICON.info}<div><p>Você pode ${p.days} dias, mas no começo 3 treinos com descanso entre eles rendem mais. Nos outros dias, uma caminhada leve se quiser.</p></div></div>`);
+  if (m.conservative) notes.push(`<div class="note info">${ICON.info}<div><p>Começamos um pouco mais leve para proteger as articulações. Prefira tênis com bom amortecimento e pisos mais macios.</p></div></div>`);
+  if (p.health.other) notes.push(`<div class="note info">${ICON.info}<div><p>Como você marcou outro problema de saúde, vale confirmar com seu médico antes de começar.</p></div></div>`);
+  if (p.age < 16) notes.push(`<div class="note info">${ICON.info}<div><p>Para menores de 16 anos, treine com acompanhamento de um adulto ou professor.</p></div></div>`);
+
+  $('#scr-summary').innerHTML = `
+    <div class="hero"><svg viewBox="0 0 120 120" aria-hidden="true">${MASCOT}</svg><h1>Seu plano está pronto!</h1></div>
+    <div class="stats3">
+      <div class="stat"><b>${train.length}</b><span>treinos</span></div>
+      <div class="stat"><b>${wk}</b><span>${wk===1?'semana':'semanas'}</span></div>
+      <div class="stat"><b>${fmtDM(m.race)}</b><span>${p.noDate?'seu Dia D':'a prova'}</span></div>
+    </div>
+    <div class="goal-pill">${ICON.flag}<div><div class="eyebrow">Objetivo</div><b>${m.goalText}</b></div></div>
+    ${notes.join('')}
+    ${first ? `<div class="card"><div class="eyebrow">Primeiro treino · ${fmt(first.day,{weekday:'long',day:'numeric',month:'short'})}</div>
+      <div class="today row" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3 style="font-size:1.3rem">${first.title}</h3><span class="mins">${Math.round(first.minutes)} min</span></div>
+      <div class="muted">${first.steps[1]}</div></div>` : ''}
+    <div class="foot"><button class="btn" data-act="to-plan">Ver meu calendário</button></div>`;
+}
+
+/* ---------- plano ---------- */
+let redOpen = null, sheetDay = null, confirmReset = false;
+const ds = n => E.toStr(n);
+
+function semaforo(day){
+  const k = ds(day), f = S.fb[k];
+  if (day > today()) return `<div class="future">Libera ${day-today()===1?'amanhã':`em ${day-today()} dias`}, no dia do treino.</div>`;
+  if (f){
+    const map = {g:['g',ICON.check,'Fiz bem!'], y:['y',ICON.wave,'Fiz no limite'], rf:['r',ICON.x,'Faltei'], rn:['r',ICON.x,'Tentei, não consegui']};
+    const [c,ic,t] = map[f];
+    return `<div class="logged ${c}">${ic}<span>${t}</span><button class="link" data-act="undo" data-day="${k}">Mudar</button></div>`;
+  }
+  if (redOpen===k) return `<div class="sem red">
+      <button class="sbtn r2" data-act="log" data-v="rf" data-day="${k}">Faltei<small>não deu tempo</small></button>
+      <button class="sbtn r2" data-act="log" data-v="rn" data-day="${k}">Não consegui<small>tentei, parei antes</small></button>
+    </div><button class="link" data-act="red-cancel" style="align-self:center">Cancelar</button>`;
+  return `<div class="sem">
+      <button class="sbtn g" data-act="log" data-v="g" data-day="${k}">${ICON.check}Fiz bem!</button>
+      <button class="sbtn y" data-act="log" data-v="y" data-day="${k}">${ICON.wave}Fiz no limite</button>
+      <button class="sbtn r" data-act="red" data-day="${k}">${ICON.x}Não rolou</button>
+    </div>`;
+}
+
+function workoutBody(s){
+  const lvl = s.type==='Q' ? 'Treino de ritmo' : `Nível ${s.level} · ${E.levelLabel(s.level)}`;
+  return `<span class="lvl">${lvl}</span>
+    ${s.repeat ? `<div class="note info" style="padding:10px 12px">${ICON.info}<p>Repetição do treino que ficou para trás.</p></div>` : ''}
+    <ol class="wsteps">${s.steps.map((t,i)=>`<li class="${i===s.main?'main':''}">${t}</li>`).join('')}</ol>
+    ${s.type==='R' ? `<div class="muted">Tempo estimado: cerca de ${s.est} min. Curta o caminho.</div>` : ''}`;
+}
+
+function renderPlan(){
+  recompute();
+  const t = today(), m = plan.meta, p = S.profile;
+  const st = E.stats(plan, S.fb, t);
+  const daysLeft = m.race - t;
+  const pct = st.total ? st.done/st.total : 0;
+  const byDay = {}; plan.sessions.forEach(s=>byDay[s.day]=s);
+  const todaySess = byDay[t];
+  const missing = plan.sessions.filter(s=>s.day<t && !S.fb[ds(s.day)]);
+
+  let todayHTML;
+  if (t > m.race){
+    todayHTML = `<div class="card restcard"><svg viewBox="0 0 120 120">${MASCOT}</svg><div><h3 style="font-size:1.3rem">Plano concluído!</h3><div class="muted">Que tal escolher a próxima meta?</div></div></div>`;
+  } else if (todaySess){
+    todayHTML = `<div class="card today">
+      <div class="eyebrow">Hoje · ${fmtLong(t)}</div>
+      <div class="row"><h3>${todaySess.title}</h3><span class="mins">${todaySess.type==='R'?'Prova':Math.round(todaySess.minutes)+' min'}</span></div>
+      ${workoutBody(todaySess)}
+      ${semaforo(t)}
+    </div>`;
+  } else {
+    const next = plan.sessions.find(s=>s.day>t);
+    todayHTML = `<div class="card restcard"><svg viewBox="0 0 120 120">${MASCOT}</svg><div>
+      <div class="eyebrow">Hoje · ${fmt(t,{weekday:'long'})}</div>
+      <h3 style="font-size:1.35rem">Dia de descanso</h3>
+      <div class="muted">${t<m.start?'Seu plano começa em breve.':'É no descanso que o corpo fica mais forte.'}${next?` Próximo: <b>${next.title.toLowerCase().startsWith('dia da prova')?'a prova':next.title.toLowerCase()}</b>, ${fmt(next.day,{weekday:'long'})}.`:''}</div>
+    </div></div>`;
+  }
+  const pendHTML = missing.length ? `<button class="pending" data-act="open" data-day="${missing[0].day}"><span><b>${missing.length===1?'1 treino sem registro':missing.length+' treinos sem registro'}</b><br><span class="muted">${fmt(missing[0].day,{weekday:'long',day:'numeric',month:'short'})}</span></span><span class="link">Registrar</span></button>` : '';
+
+  // calendário (semanas de segunda a domingo)
+  const first = m.start - ((E.dow(m.start)+6)%7);
+  const last = m.race + (6 - (E.dow(m.race)+6)%7);
+  let cal = ['S','T','Q','Q','S','S','D'].map(d=>`<div class="wd">${d}</div>`).join('');
+  for (let n=first; n<=last; n++){
+    const dnum = new Date(n*DAY).getUTCDate();
+    const mon = dnum===1 ? `<em>${fmt(n,{month:'short'})}</em>` : '';
+    if (n<m.start || n>m.race){ cal += `<div class="cell out" aria-hidden="true">${dnum}${mon}</div>`; continue; }
+    const s = byDay[n], f = S.fb[ds(n)];
+    let cls = 'cell';
+    if (!s) cls += ' rest';
+    else {
+      if (s.type==='R') cls += ' race';
+      if (f==='g') cls+=' g'; else if (f==='y') cls+=' y'; else if (f==='rf'||f==='rn') cls+=' r';
+      else if (n<t) cls+=' miss'; else if (s.type!=='R') cls += ' train' + (s.hard?' hard':'');
+    }
+    if (n===t) cls += ' today';
+    const label = s ? `${fmtLong(n)}: ${s.title}` : `${fmtLong(n)}: descanso`;
+    cal += `<button class="${cls}" data-act="open" data-day="${n}" aria-label="${label}">${s&&s.type==='R'&&!f?`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4h11l-2.2 4L17 12H6"/></svg>`:dnum}${!s||s.type!=='R'||f?mon:''}${s&&s.repeat?'<span class="rp" aria-hidden="true"></span>':''}</button>`;
+  }
+
+  const badges = st.badges.map((b,i)=>`<div class="badge b${i} ${b.got?'got':''}"><div class="medal">${BADGE_ICON[b.id]}</div>${b.name}</div>`).join('');
+
+  let prevFull = null;
+  const volRows = plan.weeks.map(w=>{
+    let ch = '—';
+    if (w.full && prevFull && !w.taper){ const d = (w.done/prevFull.actual - 1)*100; ch = (d>=0?'+':'')+d.toFixed(1).replace('.',',')+'%'; }
+    if (w.full) prevFull = w;
+    return `<tr><td>${w.taper?'Polimento':'Semana '+w.n}</td><td>${fmtDM(w.first)}–${fmtDM(w.last)}</td><td>${w.count}</td><td>${w.level}</td><td>${w.done} min</td><td>${w.full&&!w.taper?ch:(w.taper?'reduz':'parcial')}</td></tr>`;
+  }).join('');
+  const logHTML = plan.log.length ? `<ul class="loglist">${plan.log.slice().reverse().map(l=>`<li>${l.msg}</li>`).join('')}</ul>` : `<p class="muted" style="margin:0">Nenhum ajuste ainda. Registre seus treinos e o plano se adapta.</p>`;
+
+  $('#scr-plan').innerHTML = `
+    <header class="topbar">
+      <div class="brand"><svg viewBox="0 0 120 120" aria-hidden="true">${MASCOT}</svg>Bora</div>
+      <span class="pill fire" title="Ofensiva">${ICON.fire}${st.streak}</span>
+      <span class="pill pts" title="Pontos de constância">${ICON.star}${st.points}</span>
+      <button class="iconbtn" data-act="settings" aria-label="Ajustes">${ICON.gear}</button>
+    </header>
+    ${p.health.cardiac && st.done===0 ? `<div class="note stop">${ICON.heart}<p>Lembrete: comece só depois da liberação médica.</p></div>` : ''}
+    <div class="card goalcard">
+      <div class="row"><div><div class="eyebrow">Rumo aos ${m.label}</div><h2>${m.goalText}</h2></div>
+      <span class="countdown">${daysLeft>0?`faltam ${daysLeft} dias`:daysLeft===0?'é hoje!':'concluído'}</span></div>
+      <div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="${st.total}" aria-valuenow="${st.done}" aria-label="Treinos concluídos">
+        <div class="fill" style="width:calc(${(pct*100).toFixed(1)}% - ${(pct*22).toFixed(1)}px)"></div>
+        <div class="runner" style="left:max(30px, calc(${(pct*100).toFixed(1)}% - ${(pct*22).toFixed(1)}px))"></div>
+        <div class="finish"></div>
+      </div>
+      <div class="trackmeta"><span>${Math.min(st.done, st.total-1)} de ${st.total-1} treinos</span><span>${p.noDate?'Dia D':'Prova'} ${fmtDM(m.race)}</span></div>
+    </div>
+    ${pendHTML}
+    ${todayHTML}
+    <div class="sect"><h2>Calendário</h2><span class="muted">${fmt(m.start,{month:'short'})} – ${fmt(m.race,{month:'short',year:'numeric'})}</span></div>
+    <div class="cal">${cal}</div>
+    <div class="legend">
+      <span><i style="box-shadow:inset 0 0 0 3px var(--accent)"></i>Treino</span>
+      <span><i style="background:var(--go)"></i>Fiz bem</span>
+      <span><i style="background:var(--warn)"></i>No limite</span>
+      <span><i style="background:var(--stop)"></i>Não rolou</span>
+      <span><i style="background:var(--sky)"></i>Repetição</span>
+    </div>
+    <div class="sect"><h2>Conquistas</h2><span class="muted">${st.badges.filter(b=>b.got).length} de 4</span></div>
+    <div class="badges">${badges}</div>
+    <details class="how" id="how">
+      <summary>Como seu plano se adapta</summary>
+      <div class="how-body">
+        <ul>
+          <li>Começa com corrida e caminhada intercaladas e sobe um nível por semana.</li>
+          <li>O tempo total da semana cresce no máximo 10%.</li>
+          <li>Nunca dois treinos fortes em dias seguidos. ${m.pat.beginner?'Para quem está começando, sempre 1 dia de descanso entre treinos.':''}</li>
+          <li>A última semana é de polimento: menos volume e descanso na véspera.</li>
+          <li><b>Verde</b> segue o plano. <b>Dois amarelos seguidos</b> repetem o nível na semana seguinte. <b>Faltou</b>: o treino se repete. <b>Não conseguiu</b>: volta um nível.</li>
+          <li>Pontos: verde e amarelo valem 10, tentar e não conseguir vale 5, semana completa vale +20. A ofensiva só quebra se você faltar num dia de treino.</li>
+        </ul>
+        <div><div class="eyebrow" style="margin-bottom:6px">Ajustes feitos</div>${logHTML}</div>
+        <div><div class="eyebrow" style="margin-bottom:6px">Volume por semana</div>
+          <div class="vol"><table><thead><tr><th>Semana</th><th>Datas</th><th>Treinos</th><th>Nível</th><th>Tempo</th><th>Variação</th></tr></thead><tbody>${volRows}</tbody></table></div>
+        </div>
+      </div>
+    </details>`;
+  if (howOpen) $('#how').open = true;
+  $('#how').addEventListener('toggle', e=>{ howOpen = e.target.open; });
+  return st;
+}
+let howOpen = false;
+
+/* ---------- folha de detalhes ---------- */
+function openModal(html){
+  $('#layer').innerHTML = `<div class="scrim" data-act="close-bg"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`;
+}
+function closeModal(){ $('#layer').innerHTML=''; sheetDay=null; redOpen=null; confirmReset=false; }
+
+function openDay(n){
+  n = +n; sheetDay = n;
+  const s = plan.sessions.find(x=>x.day===n);
+  const w = s ? plan.weeks[s.week] : null;
+  if (!s){
+    openModal(`<div class="grab"></div><div class="sheet-h"><div><div class="eyebrow">${fmtLong(n)}</div><h3>Descanso</h3></div><button class="iconbtn" data-act="close" aria-label="Fechar">${ICON.x}</button></div>
+      <p style="margin:0">Dia de recuperação. Se quiser, uma caminhada leve de 20 min. Sem correr.</p>`);
+    return;
+  }
+  const tag = {E:'Leve',L:'Longão',Q:'Tiros',T:'Polimento',R:'Prova'}[s.type];
+  openModal(`<div class="grab"></div>
+    <div class="sheet-h"><div><div class="eyebrow">${fmtLong(n)} · ${w.taper?'semana do polimento':`semana ${w.n} de ${plan.weeks.length}`}</div><h3>${s.title}</h3></div><button class="iconbtn" data-act="close" aria-label="Fechar">${ICON.x}</button></div>
+    <div style="display:flex;gap:8px;align-items:center"><span class="tag">${tag}</span>${s.type!=='R'?`<span class="mins">${Math.round(s.minutes)} min</span>`:''}</div>
+    ${workoutBody(s)}
+    ${semaforo(n)}`);
+}
+
+function openSettings(){
+  const t = today();
+  openModal(`<div class="grab"></div>
+    <div class="sheet-h"><h3>Ajustes</h3><button class="iconbtn" data-act="close" aria-label="Fechar">${ICON.x}</button></div>
+    <div class="card" style="gap:10px">
+      <div class="eyebrow">Ferramenta de teste: data de hoje</div>
+      <div><b>${fmtLong(t)}</b>${S.sim?` <span class="muted">(simulada, ${S.sim>0?'+':''}${S.sim} dia${Math.abs(S.sim)===1?'':'s'})</span>`:' <span class="muted">(real)</span>'}</div>
+      <div class="settings-row">
+        <button class="btn ghost" data-act="sim" data-v="-1">− 1 dia</button>
+        <button class="btn ghost" data-act="sim" data-v="1">+ 1 dia</button>
+        <button class="btn ghost" data-act="sim" data-v="7">+ 7 dias</button>
+      </div>
+      ${S.sim?`<button class="link" data-act="sim" data-v="0" style="align-self:flex-start">Voltar para a data real</button>`:''}
+    </div>
+    <div class="card" style="gap:6px">
+      <div class="eyebrow">Seu perfil</div>
+      <div>${plan.meta.label} · ${S.profile.days} dias/semana · ${S.profile.age} anos · ${S.profile.weight} kg</div>
+      <div class="muted">${{never:'Nunca correu',sometimes:'Corre às vezes',often:'Corre com frequência'}[S.profile.exp]}</div>
+    </div>
+    <button class="btn ${confirmReset?'':'ghost'}" data-act="reset" style="${confirmReset?'background:var(--stop);box-shadow:0 5px 0 var(--stop-d)':''}">${confirmReset?'Toque de novo para apagar tudo':'Novo plano'}</button>`);
+}
+
+/* ---------- registro do treino ---------- */
+let toastTimer;
+function toast(main, sub){
+  clearTimeout(toastTimer);
+  const el = document.createElement('div'); el.className='toast'; el.setAttribute('role','status');
+  el.innerHTML = `<span>${main}</span>${sub?`<small>${sub}</small>`:''}`;
+  $$('.toast').forEach(x=>x.remove()); document.body.appendChild(el);
+  toastTimer = setTimeout(()=>el.remove(), 3600);
+}
+function celebrate(b, idx){
+  const colors = ['var(--go)','var(--sky)','var(--grape)','var(--accent)','var(--warn)'];
+  const div = document.createElement('div'); div.className='party';
+  div.innerHTML = `<div class="box"><div class="badge got b${idx}" style="font-size:1rem"><div class="medal">${BADGE_ICON[b.id]}</div></div>
+    <div class="eyebrow">Nova conquista</div><h2 style="font-size:1.6rem">${b.name}</h2>
+    <p class="muted" style="margin:0">${{first:'O mais difícil já foi: começar.',week:'Uma semana inteira cumprida. Isso é constância.',half:'Metade do caminho até a prova. Siga no seu ritmo.',race:'Você cruzou a linha de chegada!'}[b.id]}</p>
+    <button class="btn" data-act="party-close">Continuar</button></div>`;
+  document.body.appendChild(div);
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches){
+    for (let i=0;i<40;i++){ const c=document.createElement('i'); c.className='conf'; c.style.left=Math.random()*100+'vw'; c.style.background=colors[i%5]; c.style.animationDelay=(Math.random()*.5)+'s'; document.body.appendChild(c); setTimeout(()=>c.remove(),2400); }
+  }
+}
+
+function logFb(k, v){
+  const t = today();
+  const beforeMsgs = new Set(plan.log.map(l=>l.msg));
+  const before = E.stats(plan, S.fb, t);
+  if (v===null) delete S.fb[k]; else S.fb[k] = v;
+  redOpen = null; save();
+  const st = renderPlan();
+  if (sheetDay!==null) openDay(sheetDay);
+  if (v===null) return;
+  const newMsg = plan.log.find(l=>!beforeMsgs.has(l.msg));
+  const pts = st.points - before.points;
+  const head = {g:'Mandou bem!', y:'Boa! Ouvir o corpo também conta.', rf:'Sem problema. Esse treino volta no próximo dia de treino.', rn:'Tudo bem. Vamos recuar um nível para ganhar confiança.'}[v];
+  const sub = [pts>0?`+${pts} pontos`:'', (v!=='rf')?`ofensiva ${st.streak}`:'ofensiva zerada', newMsg && v!=='rf' && v!=='rn' ? newMsg.msg : ''].filter(Boolean).join(' · ');
+  toast(head, sub);
+  st.badges.forEach((b,i)=>{ if (b.got && !S.seen[b.id]){ S.seen[b.id]=true; save(); setTimeout(()=>celebrate(b,i), 350); } });
+}
+
+/* ---------- eventos ---------- */
+document.addEventListener('click', e=>{
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const a = el.dataset.act;
+  if (a==='close-bg'){ if (e.target===el) closeModal(); return; }
+  if (a==='close') return closeModal();
+  if (a==='cardiac-ok'){ closeModal(); return generate(); }
+  if (a==='to-plan'){ history_.length=0; renderPlan(); return go('plan', false); }
+  if (a==='open') return openDay(el.dataset.day);
+  if (a==='log') return logFb(el.dataset.day, el.dataset.v);
+  if (a==='undo') return logFb(el.dataset.day, null);
+  if (a==='red'){ redOpen = el.dataset.day; renderPlan(); if (sheetDay!==null) openDay(sheetDay); return; }
+  if (a==='red-cancel'){ redOpen = null; renderPlan(); if (sheetDay!==null) openDay(sheetDay); return; }
+  if (a==='settings'){ confirmReset=false; return openSettings(); }
+  if (a==='sim'){ const v=+el.dataset.v; S.sim = v===0 ? 0 : S.sim+v; save(); renderPlan(); return openSettings(); }
+  if (a==='reset'){
+    if (!confirmReset){ confirmReset = true; return openSettings(); }
+    S = {profile:null, fb:{}, sim:S.sim, seen:{}}; save(); closeModal(); history_.length=0; return go('home', false);
+  }
+  if (a==='party-close'){ el.closest('.party').remove(); }
+});
+document.addEventListener('keydown', e=>{ if (e.key==='Escape'){ closeModal(); $$('.party').forEach(x=>x.remove()); } });
+
+/* ---------- início ---------- */
+if (S.profile){ try { renderPlan(); go('plan', false); } catch(err){ S.profile=null; save(); go('home', false); } }
+else go('home', false);
+</script>
+
+</body>
+</html>
