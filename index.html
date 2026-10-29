@@ -306,6 +306,24 @@ textarea:focus{border-color:var(--sky);outline:none}
 .switch-row input:checked{background:var(--go)}
 .switch-row input:checked::after{transform:translateX(22px)}
 .hometip .link{padding:0;font-size:inherit}
+/* Premium e compartilhar */
+.dist.locked{position:relative}
+.dist.locked b,.dist.locked > span:last-child{opacity:.8}
+.lock{position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:5px;background:rgba(0,0,0,.24);color:var(--on-accent);border-radius:99px;padding:5px 10px;font-size:.78rem;font-weight:900;letter-spacing:.04em;text-transform:uppercase}
+.lock svg{width:14px;height:14px}
+.premium-hero{display:flex;align-items:center;gap:14px;background:var(--grape);color:var(--on-accent);border-radius:20px;padding:16px;box-shadow:0 5px 0 var(--grape-d)}
+.premium-hero b{font-family:var(--display);font-size:2.6rem;font-weight:700;line-height:1}
+.premium-hero span{font-weight:800}
+button.pill{border:0;background:transparent;cursor:pointer}
+button.pill.fire{background:var(--accent-soft)}
+button.badge{background:none;border:0;padding:0;font:inherit;cursor:pointer}
+.btn.share-btn{background:var(--sky);box-shadow:0 5px 0 var(--sky-d);font-size:1rem;padding:12px 16px}
+.btn.share-btn:active{box-shadow:0 0 0 var(--sky-d)}
+.btn svg{width:22px;height:22px;flex:none}
+.share-prev{display:grid;place-items:center;min-height:200px}
+.share-prev img{display:block;height:min(52vh,560px);max-width:100%;aspect-ratio:9/16;object-fit:contain;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.share-acts{display:flex;flex-direction:column;gap:12px}
+a.btn{text-decoration:none}
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -325,7 +343,7 @@ textarea:focus{border-color:var(--sky);outline:none}
       <button class="dist d2" data-dist="2"><b>2<small>km</small></b><span>Primeiro passo</span></button>
       <button class="dist d5" data-dist="5"><b>5<small>km</small></b><span>A clássica</span></button>
       <button class="dist d10" data-dist="10"><b>10<small>km</small></b><span>Desafio</span></button>
-      <button class="dist d21" data-dist="21"><b>21<small>km</small></b><span>Meia maratona</span></button>
+      <button class="dist d21 locked" data-act="premium" aria-label="21 km, meia maratona: em breve no Premium"><span class="lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="currentColor" stroke="none"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg>Premium</span><b>21<small>km</small></b><span>Meia maratona</span></button>
     </div>
     <button class="example" id="btn-example">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5l11 7-11 7z"/></svg>
@@ -647,14 +665,17 @@ function save(){ try { localStorage.setItem(STORE, JSON.stringify(S)); } catch(e
 /* Passa o plano do Safari para o app da tela de início no iPhone (que tem armazenamento separado) */
 function encodeState(){ try { return btoa(unescape(encodeURIComponent(JSON.stringify(S)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); } catch(e){ return ''; } }
 function decodeState(t){ try { t = t.replace(/-/g,'+').replace(/_/g,'/'); return JSON.parse(decodeURIComponent(escape(atob(t)))); } catch(e){ return null; } }
-let S = load(), imported = false;
+let S = load(), imported = false, origemParam = '';
 try {
-  const qs = new URLSearchParams(location.search).get('s');
+  const sp = new URLSearchParams(location.search);
+  // ?origem=bio, ?origem=turma… diz de onde a pessoa veio (fica gravado só o primeiro acesso)
+  origemParam = (sp.get('origem') || '').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 30);
+  const qs = sp.get('s');
   if (qs){
     const inc = decodeState(qs);
     if (inc && inc.profile && !(S && S.profile)){ S = inc; imported = true; }
-    history.replaceState(null, '', location.pathname);
   }
+  if (qs || origemParam) history.replaceState(null, '', location.pathname);
 } catch(e){}
 S = S || {profile:null, fb:{}, sim:0, seen:{}};
 S.fb = S.fb || {}; S.seen = S.seen || {}; S.sim = S.sim || 0;
@@ -662,6 +683,7 @@ S.uid = S.uid || ('u' + Date.now().toString(36) + Math.random().toString(36).sli
 S.survey = S.survey || {state:null, askAt:3};
 S.install = S.install || {};
 if (S.analytics === undefined) S.analytics = true;
+S.origem = S.origem || origemParam || 'direto';
 save();
 
 function isStandalone(){ try { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch(e){ return false; } }
@@ -672,8 +694,8 @@ if (!IS_IOS){ const l = document.createElement('link'); l.rel = 'manifest'; l.hr
 /* ---------- medição anônima ---------- */
 // Cole aqui a "Project API key" do PostHog (começa com phc_). Vazio = medição desligada.
 // Se o projeto for da região EU, troque o host para https://eu.i.posthog.com
-const ANALYTICS = { key: '', host: 'https://us.i.posthog.com' };
-const APP_VERSION = 'v2';
+const ANALYTICS = { key: 'phc_rELMGmsGLtbFbYQ6fziw3PnCvGwm2gyXxyjJSMqPWEpk', host: 'https://eu.i.posthog.com' };
+const APP_VERSION = 'v3';
 const Track = (() => {
   let ph = null, queue = [], booted = false;
   const clean = v => (typeof v === 'string' && /^https?:/.test(v)) ? v.split(/[?#]/)[0] : v;
@@ -682,7 +704,7 @@ const Track = (() => {
   const active = () => !!ANALYTICS.key && S.analytics;
   function supers(){
     const p = S.profile;
-    return { versao: APP_VERSION, instalado: isStandalone(), data_simulada: !!S.sim, exemplo: !!(p && p.example),
+    return { versao: APP_VERSION, origem: S.origem, instalado: isStandalone(), data_simulada: !!S.sim, exemplo: !!(p && p.example),
       meta_km: p ? p.dist : null, dias_semana: p ? p.days : null, experiencia: p ? p.exp : null, faixa_etaria: p ? ageBand(p.age) : null };
   }
   function boot(){
@@ -913,7 +935,8 @@ function semaforo(day){
   if (f){
     const map = {g:['g',ICON.check,'Fiz bem!'], y:['y',ICON.wave,'Fiz no limite'], rf:['r',ICON.x,'Faltei'], rn:['r',ICON.x,'Tentei, não consegui']};
     const [c,ic,t] = map[f];
-    return `<div class="logged ${c}">${ic}<span>${t}</span><button class="link" data-act="undo" data-day="${k}">Mudar</button></div>`;
+    const shareBtn = (f==='g'||f==='y') ? `<button class="btn share-btn" data-act="share-day" data-day="${k}">${ICON.share}Compartilhar treino</button>` : '';
+    return `<div class="logged ${c}">${ic}<span>${t}</span><button class="link" data-act="undo" data-day="${k}">Mudar</button></div>${shareBtn}`;
   }
   if (redOpen===k) return `<div class="sem red">
       <button class="sbtn r2" data-act="log" data-v="rf" data-day="${k}">Faltei<small>não deu tempo</small></button>
@@ -985,7 +1008,9 @@ function renderPlan(){
     cal += `<button class="${cls}" data-act="open" data-day="${n}" aria-label="${label}">${s&&s.type==='R'&&!f?`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4h11l-2.2 4L17 12H6"/></svg>`:dnum}${!s||s.type!=='R'||f?mon:''}${s&&s.repeat?'<span class="rp" aria-hidden="true"></span>':''}</button>`;
   }
 
-  const badges = st.badges.map((b,i)=>`<div class="badge b${i} ${b.got?'got':''}"><div class="medal">${BADGE_ICON[b.id]}</div>${b.name}</div>`).join('');
+  const badges = st.badges.map((b,i)=> b.got
+    ? `<button class="badge b${i} got" data-act="share-badge" data-id="${b.id}" aria-label="${b.name}. Compartilhar"><span class="medal">${BADGE_ICON[b.id]}</span>${b.name}</button>`
+    : `<div class="badge b${i}"><div class="medal">${BADGE_ICON[b.id]}</div>${b.name}</div>`).join('');
 
   let prevFull = null;
   const volRows = plan.weeks.map(w=>{
@@ -999,7 +1024,7 @@ function renderPlan(){
   $('#scr-plan').innerHTML = `
     <header class="topbar">
       <div class="brand"><svg viewBox="0 0 120 120" aria-hidden="true">${MASCOT}</svg>Bora</div>
-      <span class="pill fire" title="Ofensiva">${ICON.fire}${st.streak}</span>
+      ${st.streak>0 ? `<button class="pill fire" data-act="share-streak" title="Compartilhar ofensiva" aria-label="Ofensiva de ${st.streak}. Compartilhar">${ICON.fire}${st.streak}</button>` : `<span class="pill fire" title="Ofensiva">${ICON.fire}${st.streak}</span>`}
       <span class="pill pts" title="Pontos de constância">${ICON.star}${st.points}</span>
       <button class="iconbtn" data-act="settings" aria-label="Ajustes">${ICON.gear}</button>
     </header>
@@ -1112,13 +1137,15 @@ function toast(main, sub){
   $$('.toast').forEach(x=>x.remove()); document.body.appendChild(el);
   toastTimer = setTimeout(()=>el.remove(), 3600);
 }
+const BADGE_MSG = {first:'O mais difícil já foi: começar.', week:'Uma semana inteira cumprida. Isso é constância.', half:'Metade do caminho até a prova. Siga no seu ritmo.', race:'Você cruzou a linha de chegada!'};
 function celebrate(b, idx){
   const colors = ['var(--go)','var(--sky)','var(--grape)','var(--accent)','var(--warn)'];
   const div = document.createElement('div'); div.className='party';
   div.innerHTML = `<div class="box"><div class="badge got b${idx}" style="font-size:1rem"><div class="medal">${BADGE_ICON[b.id]}</div></div>
     <div class="eyebrow">Nova conquista</div><h2 style="font-size:1.6rem">${b.name}</h2>
-    <p class="muted" style="margin:0">${{first:'O mais difícil já foi: começar.',week:'Uma semana inteira cumprida. Isso é constância.',half:'Metade do caminho até a prova. Siga no seu ritmo.',race:'Você cruzou a linha de chegada!'}[b.id]}</p>
-    <button class="btn" data-act="party-close">Continuar</button></div>`;
+    <p class="muted" style="margin:0">${BADGE_MSG[b.id]}</p>
+    <button class="btn" data-act="party-close">Continuar</button>
+    <button class="link" data-act="share-badge" data-id="${b.id}">Compartilhar conquista</button></div>`;
   document.body.appendChild(div);
   if (!matchMedia('(prefers-reduced-motion: reduce)').matches){
     for (let i=0;i<40;i++){ const c=document.createElement('i'); c.className='conf'; c.style.left=Math.random()*100+'vw'; c.style.background=colors[i%5]; c.style.animationDelay=(Math.random()*.5)+'s'; document.body.appendChild(c); setTimeout(()=>c.remove(),2400); }
@@ -1229,6 +1256,151 @@ function doInstall(){
   modalCleanup = () => { try { history.replaceState(null, '', location.pathname); } catch(e){} };
 }
 
+/* ---------- Premium (21 km) ---------- */
+function openPremium(){
+  track('premium_visto', {recurso:'21k'});
+  openModal(`<div class="grab"></div>
+    <div class="sheet-h"><div><div class="eyebrow">Bora Premium · em breve</div><h3>Meia maratona</h3></div><button class="iconbtn" data-act="close" aria-label="Fechar">${ICON.x}</button></div>
+    <div class="premium-hero"><b>21<small style="font-size:1.1rem">km</small></b><span>Plano completo até os 21 km, com a mesma lógica que respeita o seu ritmo.</span></div>
+    <p>A meta de 21 km vai fazer parte do Bora Premium, que ainda está em construção.</p>
+    <p class="muted">Enquanto isso, os 10 km são o melhor degrau antes da meia.</p>
+    <button class="btn" data-act="premium-want">Quero o Premium</button>
+    <button class="btn ghost" data-act="premium-10k">Começar pelos 10 km</button>`);
+}
+
+/* ---------- compartilhar ---------- */
+const SITE_URL = 'https://jotadablio.github.io/bora-correr/';
+const SHARE_HANDLE = '@boracorrerapp';
+const BADGE_BG = ['#22B356', '#2D7BF0', '#8A5CF5', '#17202E'];
+let shareFile = null, shareKind = null;
+
+function svgImage(svg){
+  return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); });
+}
+function litSVG(inner, color){ return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 24 24" color="${color}">${inner}</svg>`; }
+function iconInner(svg, bg){ return svg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '').replace(/var\(--surface\)/g, bg); }
+function iconAttrs(svg){ const m = svg.match(/^<svg([^>]*)>/); return m ? m[1].replace(/viewBox="[^"]*"/, '') : ''; }
+function iconSVG(svg, color, bg){ return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 24 24" color="${color}" ${iconAttrs(svg)}>${iconInner(svg, bg)}</svg>`; }
+function mascotSVG(){
+  const m = MASCOT.replace(/var\(--line\)/g, 'rgba(0,0,0,.18)').replace(/var\(--accent-d\)/g, '#CF4C12')
+    .replace(/var\(--accent\)/g, '#FF6A2B').replace(/var\(--sky\)/g, '#FFFFFF');
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 120 120">${m}</svg>`;
+}
+function rrect(g, x, y, w, h, r){ g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, r); else g.rect(x, y, w, h); }
+function fitTitle(g, text, maxW, weight, size, minSize){
+  const fam = '"Fredoka", ui-rounded, system-ui, sans-serif';
+  for (let sz = size; sz >= minSize; sz -= 6){ g.font = `${weight} ${sz}px ${fam}`; if (g.measureText(text).width <= maxW) return {size:sz, lines:[text]}; }
+  const words = text.split(' ');
+  for (let sz = size; sz >= 60; sz -= 6){
+    g.font = `${weight} ${sz}px ${fam}`; let best = null;
+    for (let i = 1; i < words.length; i++){
+      const a = words.slice(0, i).join(' '), b = words.slice(i).join(' ');
+      const w = Math.max(g.measureText(a).width, g.measureText(b).width);
+      if (w <= maxW && (!best || w < best.w)) best = {w, lines:[a, b]};
+    }
+    if (best) return {size:sz, lines:best.lines};
+  }
+  return {size:60, lines:[text]};
+}
+async function makeCard(d){
+  try { await Promise.all(['700 120px Fredoka', '600 60px Fredoka', '900 44px Nunito', '800 44px Nunito'].map(f => document.fonts.load(f))); } catch(e){}
+  const W = 1080, H = 1920, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const g = cv.getContext('2d'), fg = d.fg || '#FFFFFF';
+  const body = '"Nunito", ui-rounded, system-ui, sans-serif', disp = '"Fredoka", ui-rounded, system-ui, sans-serif';
+  g.fillStyle = d.bg; g.fillRect(0, 0, W, H);
+  g.fillStyle = d.soft || 'rgba(255,255,255,.14)';
+  g.beginPath(); g.arc(W - 40, 220, 300, 0, Math.PI*2); g.fill();
+  g.beginPath(); g.arc(60, 1240, 230, 0, Math.PI*2); g.fill();
+  // destaque
+  if (d.hero === 'mascot'){ g.drawImage(await svgImage(mascotSVG()), W/2 - 270, 150, 540, 540); }
+  if (d.hero === 'flame'){ g.drawImage(await svgImage(iconSVG(ICON.fire, '#FF7A3D', d.bg)), W/2 - 240, 170, 480, 480); }
+  if (d.hero === 'medal'){
+    g.fillStyle = 'rgba(0,0,0,.18)'; g.beginPath(); g.arc(W/2, 440, 250, 0, Math.PI*2); g.fill();
+    g.fillStyle = '#FFFFFF'; g.beginPath(); g.arc(W/2, 420, 250, 0, Math.PI*2); g.fill();
+    g.drawImage(await svgImage(iconSVG(d.icon, d.bg, '#FFFFFF')), W/2 - 150, 270, 300, 300);
+  }
+  g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillStyle = fg;
+  // rótulo
+  g.font = `900 44px ${body}`; if ('letterSpacing' in g) g.letterSpacing = '6px';
+  g.globalAlpha = .9; g.fillText(d.eyebrow.toUpperCase(), W/2, 820); g.globalAlpha = 1;
+  if ('letterSpacing' in g) g.letterSpacing = '0px';
+  // título
+  const t = fitTitle(g, d.title, W - 160, 700, d.titleSize || 150, 96);
+  g.fillStyle = d.titleColor || fg; g.font = `700 ${t.size}px ${disp}`;
+  let y = 880 + t.size*0.82;
+  t.lines.forEach((ln, i) => g.fillText(ln, W/2, y + i*t.size*1.02));
+  y += (t.lines.length - 1)*t.size*1.02 + 100;
+  // linhas
+  g.fillStyle = fg; g.font = `800 50px ${body}`;
+  d.lines.filter(Boolean).forEach((ln, i) => { g.globalAlpha = i === 0 ? 1 : .85; g.fillText(ln, W/2, y + i*72); });
+  g.globalAlpha = 1;
+  // pista até a prova
+  if (d.progress){
+    const x = 130, w = W - 260, py = 1470, h = 50, pct = Math.max(0, Math.min(1, d.progress.done / Math.max(1, d.progress.total)));
+    g.fillStyle = d.track || 'rgba(255,255,255,.25)'; rrect(g, x, py, w, h, 25); g.fill();
+    g.fillStyle = fg; rrect(g, x, py, Math.max(h, w*pct), h, 25); g.fill();
+    g.fillStyle = d.bg; g.beginPath(); g.arc(x + Math.max(h, w*pct) - 25, py + 25, 15, 0, Math.PI*2); g.fill();
+    g.fillStyle = fg; g.font = `800 38px ${body}`; g.globalAlpha = .9;
+    g.textAlign = 'left'; g.fillText(`${d.progress.done} de ${d.progress.total} treinos`, x, py + 108);
+    g.textAlign = 'right'; g.fillText(d.progress.right, x + w, py + 108);
+    g.textAlign = 'center'; g.globalAlpha = 1;
+  }
+  // assinatura
+  g.fillStyle = fg; g.font = `700 74px ${disp}`; g.fillText('Bora Correr', W/2, 1760);
+  g.font = `800 42px ${body}`; g.globalAlpha = .85; g.fillText(SHARE_HANDLE, W/2, 1826); g.globalAlpha = 1;
+  return await new Promise(res => cv.toBlob(res, 'image/png'));
+}
+function progressInfo(st){
+  const m = plan.meta, total = st.total - 1, raceDone = ['g','y'].includes(S.fb[ds(m.race)]);
+  return {done: raceDone ? total : Math.min(st.done, total), total, right: `${S.profile.noDate ? 'Dia D' : 'Prova'} ${fmtDM(m.race)}`};
+}
+function cardDay(k){
+  const n = E.toNum(k), s = plan.sessions.find(x => x.day === n), v = S.fb[k], m = plan.meta;
+  const st = E.stats(plan, S.fb, today()), w = plan.weeks[s.week], yellow = v === 'y', race = s.type === 'R';
+  return {kind:'treino', hero:'mascot', bg: yellow ? '#FFC22E' : '#22B356', fg: yellow ? '#3A2A00' : '#FFFFFF',
+    soft: yellow ? 'rgba(255,255,255,.3)' : 'rgba(255,255,255,.14)', track: yellow ? 'rgba(58,42,0,.16)' : 'rgba(255,255,255,.25)',
+    eyebrow: n === today() ? 'Treino de hoje' : fmt(n, {weekday:'long', day:'numeric', month:'short'}),
+    title: race ? 'Prova concluída!' : yellow ? 'Fiz no limite' : 'Treino feito!',
+    lines: race ? [`${m.label} completos`, 'Da primeira caminhada até a chegada']
+      : [`${s.title} · ${Math.round(s.minutes)} min`, w.taper ? `Semana do polimento · rumo aos ${m.label}` : `Semana ${w.n} de ${plan.weeks.length} · rumo aos ${m.label}`, yellow ? 'Ouvir o corpo também é treino' : ''],
+    progress: progressInfo(st), alt: race ? 'prova concluída' : 'treino concluído'};
+}
+function cardStreak(){
+  const st = E.stats(plan, S.fb, today()), m = plan.meta, left = m.race - today();
+  return {kind:'ofensiva', hero:'flame', bg:'#17202E', fg:'#FFFFFF', soft:'rgba(255,255,255,.06)', track:'rgba(255,255,255,.16)',
+    eyebrow:'Ofensiva', title:String(st.streak), titleSize:330, titleColor:'#FF7A3D',
+    lines:[st.streak === 1 ? 'treino sem faltar' : 'treinos seguidos sem faltar', left > 0 ? `Rumo aos ${m.label} · faltam ${left} dias` : `Rumo aos ${m.label}`],
+    progress: progressInfo(st), alt:`ofensiva de ${st.streak}`};
+}
+function cardBadge(id){
+  const st = E.stats(plan, S.fb, today()), i = st.badges.findIndex(b => b.id === id), b = st.badges[i];
+  return {kind:'conquista', hero:'medal', icon:BADGE_ICON[id], bg:BADGE_BG[i], fg:'#FFFFFF', soft:'rgba(255,255,255,.12)',
+    eyebrow:'Nova conquista', title:b.name, titleSize:130, lines:[BADGE_MSG[id], `Rumo aos ${plan.meta.label}`],
+    progress: progressInfo(st), alt:`conquista ${b.name}`};
+}
+async function openShare(d){
+  shareKind = d.kind; shareFile = null;
+  clearTimeout(toastTimer); $$('.toast, .conf').forEach(x=>x.remove());
+  track('compartilhar_aberto', {tipo:d.kind});
+  openModal(`<div class="grab"></div>
+    <div class="sheet-h"><h3>Compartilhar</h3><button class="iconbtn" data-act="close" aria-label="Fechar">${ICON.x}</button></div>
+    <div class="share-prev" id="share-prev"><span class="muted">Preparando a imagem…</span></div>
+    <div class="share-acts" id="share-acts" hidden></div>`);
+  let blob = null;
+  try { blob = await makeCard(d); } catch(e){}
+  const prev = $('#share-prev'); if (!prev) return;
+  if (!blob){ prev.innerHTML = '<span class="err">Não deu para gerar a imagem neste aparelho.</span>'; return; }
+  const url = URL.createObjectURL(blob);
+  shareFile = new File([blob], 'bora-correr.png', {type:'image/png'});
+  prev.innerHTML = `<img src="${url}" alt="Imagem para compartilhar: ${esc(d.alt)}">`;
+  let canFile = false; try { canFile = !!(navigator.canShare && navigator.canShare({files:[shareFile]})); } catch(e){}
+  const acts = $('#share-acts'); acts.hidden = false;
+  acts.innerHTML = `${canFile ? `<button class="btn" data-act="share-go">${ICON.share}Compartilhar</button>` : ''}
+    <a class="btn ${canFile ? 'ghost' : ''}" href="${url}" download="bora-correr.png" data-act="share-dl">Baixar imagem</a>
+    ${canFile ? '' : '<p class="muted" style="text-align:center">Depois é só postar nos Stories ou mandar no WhatsApp.</p>'}`;
+}
+function resumeSurveyAfter(){ if (surveyPending) modalCleanup = () => setTimeout(openSurvey, 250); }
+
 /* ---------- sobre os dados ---------- */
 function openPrivacy(){
   openModal(`<div class="grab"></div>
@@ -1255,6 +1427,21 @@ document.addEventListener('click', e=>{
   if (a==='cardiac-ok'){ closeModal(); return generate(); }
   if (a==='to-plan'){ history_.length=0; renderPlan(); track('calendario_aberto'); return go('plan', false); }
   if (a==='privacy') return openPrivacy();
+  if (a==='premium') return openPremium();
+  if (a==='premium-want'){ track('premium_interesse', {recurso:'21k'}); closeModal(); return toast('Anotado!', 'Seu interesse ajuda a decidir o que vem primeiro.'); }
+  if (a==='premium-10k'){ track('premium_alternativa', {meta_km:10}); closeModal(); return $('[data-dist="10"]').click(); }
+  if (a==='share-day'){ openShare(cardDay(el.dataset.day)); return; }
+  if (a==='share-streak'){ openShare(cardStreak()); return; }
+  if (a==='share-badge'){ const pty = el.closest('.party'); if (pty) pty.remove(); openShare(cardBadge(el.dataset.id)); resumeSurveyAfter(); return; }
+  if (a==='share-dl'){ track('compartilhado', {tipo:shareKind, metodo:'download'}); return; }
+  if (a==='share-go'){
+    if (!shareFile) return;
+    const k = shareKind;
+    navigator.share({files:[shareFile], text:`Bora correr! ${SHARE_HANDLE} #boracorrer ${SITE_URL}?origem=compartilhamento`})
+      .then(() => { track('compartilhado', {tipo:k, metodo:'nativo'}); closeModal(); toast('Valeu por espalhar o Bora!'); })
+      .catch(err => { if (err && err.name === 'AbortError') track('compartilhar_cancelado', {tipo:k}); else toast('Não deu para abrir o compartilhamento.', 'Use "Baixar imagem" e poste do seu jeito.'); });
+    return;
+  }
   if (a==='install') return doInstall();
   if (a==='install-later'){ S.install.dismissed = true; save(); track('instalar_dispensado'); return renderPlan(); }
   if (a==='sv'){

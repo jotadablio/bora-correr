@@ -12,7 +12,7 @@ Muita gente quer correr uma prova e trava logo no começo. Não sabe por onde co
 
 Também tem quem até corre, mas sem constância. A semana aperta, um treino vira dois, depois três, e quando vê já passou um mês.
 
-O Bora Correr é a minha tentativa de resolver isso do jeito que o Duolingo resolveu para idiomas. Os treinos são curtos, há um plano claro, cada dia cumprido vira uma pequena vitória e existe uma ofensiva que dá vontade de não quebrar. Você escolhe a meta (2, 5, 10 ou 21 km), diz quantos dias por semana consegue treinar e quando é a prova. O app monta um calendário até lá, que vai se ajustando conforme você conta como foi cada treino.
+O Bora Correr é a minha tentativa de resolver isso do jeito que o Duolingo resolveu para idiomas. Os treinos são curtos, há um plano claro, cada dia cumprido vira uma pequena vitória e existe uma ofensiva que dá vontade de não quebrar. Você escolhe a meta (2, 5 ou 10 km; os 21 km chegam em breve), diz quantos dias por semana consegue treinar e quando é a prova. O app monta um calendário até lá, que vai se ajustando conforme você conta como foi cada treino.
 
 Ainda **não é um app de verdade**. É um protótipo de uma página só, feito para eu colocar na mão de pessoas reais e descobrir se a ideia funciona antes de investir no desenvolvimento.
 
@@ -67,6 +67,7 @@ Aqui o que conta é **aparecer**, não correr muito.
 - **Ofensiva:** quantos treinos seguidos você cumpriu. Dia de descanso não quebra, só faltar num dia de treino.
 - **Pontos:** verde e amarelo valem o mesmo (10). O amarelo pontua de propósito, porque ouvir o corpo também é treino. Tentar e não conseguir vale 5. Semana completa ganha bônus de 20.
 - **Conquistas:** primeiro treino, primeira semana completa, metade do caminho e dia da prova.
+- **Compartilhar:** cada treino feito, a ofensiva e as conquistas viram uma imagem no formato dos Stories, pronta para postar ou mandar no WhatsApp. Marca a gente: [@boracorrerapp](https://instagram.com/boracorrerapp) #boracorrer
 
 ## Coisas técnicas (curtas)
 
