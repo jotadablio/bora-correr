@@ -695,7 +695,7 @@ if (!IS_IOS){ const l = document.createElement('link'); l.rel = 'manifest'; l.hr
 // Cole aqui a "Project API key" do PostHog (começa com phc_). Vazio = medição desligada.
 // Se o projeto for da região EU, troque o host para https://eu.i.posthog.com
 const ANALYTICS = { key: 'phc_rELMGmsGLtbFbYQ6fziw3PnCvGwm2gyXxyjJSMqPWEpk', host: 'https://eu.i.posthog.com' };
-const APP_VERSION = 'v3';
+const APP_VERSION = 'v3.1';
 const Track = (() => {
   let ph = null, queue = [], booted = false;
   const clean = v => (typeof v === 'string' && /^https?:/.test(v)) ? v.split(/[?#]/)[0] : v;
@@ -1125,7 +1125,8 @@ function openSettings(){
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>${S.analytics?'Ligado':'Desligado'}</b><button class="link" data-act="privacy">Alterar</button></div>
     </div>
     ${!isStandalone() && (deferredPrompt || IS_IOS) ? `<button class="btn ghost" data-act="install">Adicionar à tela inicial</button>` : ''}
-    <button class="btn ${confirmReset?'':'ghost'}" data-act="reset" style="${confirmReset?'background:var(--stop);box-shadow:0 5px 0 var(--stop-d)':''}">${confirmReset?'Toque de novo para apagar tudo':'Novo plano'}</button>`);
+    <button class="btn ${confirmReset?'':'ghost'}" data-act="reset" style="${confirmReset?'background:var(--stop);box-shadow:0 5px 0 var(--stop-d)':''}">${confirmReset?'Toque de novo para apagar tudo':'Novo plano'}</button>
+    <p class="muted" style="text-align:center;font-size:.85rem">Versão ${APP_VERSION}</p>`);
 }
 
 /* ---------- registro do treino ---------- */
@@ -1472,7 +1473,19 @@ if (S.profile){ try { renderPlan(); go('plan', false); } catch(err){ S.profile=n
 else go('home', false);
 track('app_aberto', {tem_plano:!!S.profile, veio_do_safari:imported});
 if ('serviceWorker' in navigator && location.protocol === 'https:'){
-  addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
+  // Atualização: o app confere se há versão nova ao abrir e ao voltar para a tela;
+  // quando a nova versão assume, recarrega uma vez para já mostrar a novidade.
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloaded) return;
+    reloaded = true; location.reload();
+  });
+  addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js', {updateViaCache:'none'}).then(reg => {
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(()=>{}); });
+    }).catch(()=>{});
+  });
 }
 </script>
 

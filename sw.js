@@ -1,6 +1,6 @@
 // Bora Correr: deixa o app abrir mesmo sem internet (ex.: no meio do treino).
 // Sempre tenta a versão mais nova primeiro; sem rede, usa a cópia guardada.
-const CACHE = 'bora-v3';
+const CACHE = 'bora-v3.1';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -19,7 +19,8 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
   e.respondWith(
-    fetch(req)
+    // cache: 'no-cache' confere com o servidor a cada abertura, sem esperar o cache do navegador vencer
+    fetch(req, { cache: 'no-cache' })
       .then(res => {
         if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
         return res;
